@@ -1,15 +1,16 @@
 #!/usr/bin/python
 """
 Usage:
-  pdfbookmark.py replace [options] <inputpdf> <bookmarkfile>
-  pdfbookmark.py append [options] <inputpdf> <bookmarkfile>
-  pdfbookmark.py dump [options] <inputpdf>
+  pdfbookmark.py replace [--output  FILE] <inputpdf> <tocfile>
+  pdfbookmark.py append  [--output FILE] <inputpdf> <tocfile>
+  pdfbookmark.py dump [--output-toc FILE --align-right] <inputpdf>
 
 Do something
 
 Options:
-  -o FILE, --output=FILE      Output file name.
-  -r, --align-right           Align page numbers to the right.
+  -o FILE, --output=FILE      Output PDF file with updated table of content.
+  -t FILE, --output-toc=FILE  Output table of content text file.
+  -r, --align-right           Align the page numbers to the right on the text table of content.
 """
 
 import os
@@ -110,10 +111,10 @@ def load_toc(filename):
 if __name__ == "__main__":
     args = docopt(__doc__, version='1.0')
     if args["dump"]:
-        dump_toc_text(args["<inputpdf>"], args["--output"], args["--align-right"])
+        dump_toc_text(args["<inputpdf>"], args["--output-toc"], args["--align-right"])
     elif args["replace"]:
-        toc = load_toc(args["<bookmarkfile>"])
+        toc = load_toc(args["<tocfile>"])
         add_toc_to_metadata(args["<inputpdf>"], toc, replace=True)
     elif args["append"]:
-        toc = load_toc(args["<bookmarkfile>"])
+        toc = load_toc(args["<tocfile>"])
         add_toc_to_metadata(args["<inputpdf>"], toc)
