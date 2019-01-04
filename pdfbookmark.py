@@ -38,6 +38,23 @@ def dump_metadata(inputpdf, tempdir):
     return metadatafile
 
 
+def toc_from_metadata(metadatafile):
+    """Reads the ToC from the PDF metadata and returns a list of tuple (description, level, page)"""
+    toc = list()
+    with open(metadatafile) as f:
+        lines = f.readlines()
+        indices = [i for i, s in enumerate(lines) if 'BookmarkBegin' in s]
+        for i in indices:
+            rawdescription, rawlevel, rawpage = tuple(lines[i+1:i+4])
+            description = strip_meta_desc(rawdescription)
+            level = strip_meta_desc(rawlevel)
+            page = strip_meta_desc(rawpage)
+            toc.append((description, level, page))
+        # Sort by page number
+        toc = sorted(toc, key=lambda t: int(t[2]))
+    return toc
+
+
 def dump_text_toc(inputpdf, outputpdf=None, align_page_right=False):
     """Dump the table of content of the given PDF to a text file"""
     with TemporaryDirectory() as tempdir:
@@ -77,23 +94,6 @@ def load_toc(text_toc):
 
 def strip_meta_desc(metadata_entry):
     return re.search('[^:]*: ([^\n]*)', metadata_entry).group(1)
-
-
-def toc_from_metadata(metadatafile):
-    """Reads the ToC from the PDF metadata and returns a list of tuple (description, level, page)"""
-    toc = list()
-    with open(metadatafile) as f:
-        lines = f.readlines()
-        indices = [i for i, s in enumerate(lines) if 'BookmarkBegin' in s]
-        for i in indices:
-            rawdescription, rawlevel, rawpage = tuple(lines[i+1:i+4])
-            description = strip_meta_desc(rawdescription)
-            level = strip_meta_desc(rawlevel)
-            page = strip_meta_desc(rawpage)
-            toc.append((description, level, page))
-        # Sort by page number
-        toc = sorted(toc, key=lambda t: int(t[2]))
-    return toc
 
 
 def add_toc_to_metadata(filename, toc, replace=False):
