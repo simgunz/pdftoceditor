@@ -5,12 +5,39 @@ Usage:
   pdfbookmark.py append  [--output FILE] <inputpdf> <tocfile>
   pdfbookmark.py dump [--output-toc FILE --align-right] <inputpdf>
 
-Do something
+Update the table of content of a PDF using the one specified in a text file.
+
+Format of table of content text file (page number left aligned):
+1   Section 1
+2     Subsection 1.1
+3     Subsection 1.2
+4       Subsubsection 1.1.1
+10  Section 2
+100 Section 3
+
+Format of table of content text file (page number right aligned):
+  1 Section 1
+  2   Subsection 1.1
+  3   Subsection 1.2
+  4     Subsubsection 1.1.1
+ 10 Section 2
+100 Section 3
+
+
+Operations:
+  replace <inputpdf> <tocfile>  Replace the table of content of <inputpdf> with the one
+                                specified in <tocfile>
+  append <inputpdf> <tocfile>   Append the table of content specified in <tocfile> to the existing
+                                one of <inputpdf>
+  dump <inputpdf>               Dump the table of content of <inputpdf> to a text file
+
 
 Options:
-  -o FILE, --output=FILE      Output PDF file with updated table of content.
-  -t FILE, --output-toc=FILE  Output table of content text file.
-  -r, --align-right           Align the page numbers to the right on the text table of content.
+  -o FILE, --output=FILE        Output PDF file with updated table of content.
+  -t FILE, --output-toc=FILE    Output table of content text file.
+  -r, --align-right             Align the page numbers to the right on the text table of content.
+  -h, --help                    Show this help message and exit
+  -v, --version                 Show version and exit
 """
 
 import os
