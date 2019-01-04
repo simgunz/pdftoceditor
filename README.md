@@ -1,6 +1,12 @@
 PDF ToC editor update the table of content of a PDF using the one specified in a simple text file.
 
 
+Requirements
+------------
+PDF ToC editor requires [pdftk](https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/)
+to be installed in the system.
+
+
 Text ToC file format
 --------------------
 The table of content is specified in a simple text file with the following format:
