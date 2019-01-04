@@ -1,9 +1,9 @@
 #!/usr/bin/python
 """
 Usage:
-  pdfbookmark.py replace [--output  FILE] <inputpdf> <tocfile>
-  pdfbookmark.py append  [--output FILE] <inputpdf> <tocfile>
-  pdfbookmark.py dump [--output-toc FILE --align-left] <inputpdf>
+  pdftoceditor.py replace [--output  FILE] <inputpdf> <tocfile>
+  pdftoceditor.py append  [--output FILE] <inputpdf> <tocfile>
+  pdftoceditor.py dump [--output-toc FILE --align-left] <inputpdf>
 
 Update the table of content of a PDF using the one specified in a text file.
 
