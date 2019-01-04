@@ -29,7 +29,7 @@ BookmarkPageNumber: {page}\
 """
 
 
-def get_toc_from_metadata(filename):
+def toc_from_metadata(filename):
     toc = list()
     with open(filename) as f:
         lines = f.readlines()
@@ -54,7 +54,7 @@ def add_toc_to_metadata(filename, toc, replace=False):
         with open(metadatafile) as f:
             lines = [l for l in f if not re.match('Bookmark.*', l)]
             if not replace:
-                toc += get_toc_from_metadata(metadatafile)
+                toc += toc_from_metadata(metadatafile)
                 toc = sorted(toc, key=lambda t: int(t[2]))
         for t in toc:
             bm = BM_TEMPLATE.format(title=t[0], level=t[1], page=t[2])
@@ -76,23 +76,26 @@ def dump_toc(fname, tempdir):
     return metadatafile
 
 
-def dump_toc_text(fname, outputfile=None, align_right=False):
+def dump_text_toc(inputpdf, outputpdf=None, align_page_right=False):
     with TemporaryDirectory() as tempdir:
-        metadatafile = dump_toc(fname, tempdir)
-        toc = get_toc_from_metadata(metadatafile)
-    page_number_len = len(max(toc, key=lambda t: len(t[2]))[2])
-    if not outputfile:
-        outputfile = Path(fname).with_suffix('.txt')
-    with open(outputfile, 'w') as outfile:
-        for t in toc:
-            extraspace = page_number_len - len(t[2])
-            if align_right:
-                bookmark_line = "{alignspace}{pagestr} {space}{title}"
-            else:
-                bookmark_line = "{pagestr}{alignspace} {space}{title}"
-            bookmarkentry = bookmark_line.format(pagestr=t[2], alignspace=' '*extraspace,
-                                                 space='  '*(int(t[1])-1), title=t[0])
-            print(bookmarkentry, file=outfile)
+        metadatafile = dump_toc(inputpdf, tempdir)
+        toc = toc_from_metadata(metadatafile)
+    max_page_number_len = len(max(toc, key=lambda t: len(t[2]))[2])
+    if not outputpdf:
+        outputpdf = Path(inputpdf).with_suffix('.txt')
+    if align_page_right:
+        text_toc_entry_template = "{pagepadspace}{page} {descspace}{description}"
+    else:
+        text_toc_entry_template = "{page}{pagepadspace} {descspace}{description}"
+    with open(outputpdf, 'w') as outfile:
+        for description, level, page in toc:
+            pagepadspace = ' ' * (max_page_number_len - len(page))
+            descspace = '  ' * (int(level)-1)
+            text_toc_entry = text_toc_entry_template.format(page=page,
+                                                            pagepadspace=pagepadspace,
+                                                            descspace=descspace,
+                                                            description=description)
+            print(text_toc_entry, file=outfile)
 
 
 def load_toc(filename):
@@ -111,7 +114,7 @@ def load_toc(filename):
 if __name__ == "__main__":
     args = docopt(__doc__, version='1.0')
     if args["dump"]:
-        dump_toc_text(args["<inputpdf>"], args["--output-toc"], args["--align-right"])
+        dump_text_toc(args["<inputpdf>"], args["--output-toc"], args["--align-right"])
     elif args["replace"]:
         toc = load_toc(args["<tocfile>"])
         add_toc_to_metadata(args["<inputpdf>"], toc, replace=True)
