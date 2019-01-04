@@ -3,19 +3,11 @@
 Usage:
   pdfbookmark.py replace [--output  FILE] <inputpdf> <tocfile>
   pdfbookmark.py append  [--output FILE] <inputpdf> <tocfile>
-  pdfbookmark.py dump [--output-toc FILE --align-right] <inputpdf>
+  pdfbookmark.py dump [--output-toc FILE --align-left] <inputpdf>
 
 Update the table of content of a PDF using the one specified in a text file.
 
-Format of table of content text file (page number left aligned):
-1   Section 1
-2     Subsection 1.1
-3     Subsection 1.2
-4       Subsubsection 1.1.1
-10  Section 2
-100 Section 3
-
-Format of table of content text file (page number right aligned):
+Format of table of content text file:
   1 Section 1
   2   Subsection 1.1
   3   Subsection 1.2
@@ -35,7 +27,7 @@ Operations:
 Options:
   -o FILE, --output=FILE        Output PDF file with updated table of content.
   -t FILE, --output-toc=FILE    Output table of content text file.
-  -r, --align-right             Align the page numbers to the right on the text table of content.
+  -r, --align-left              Align the page numbers to the left on the text table of content.
   -h, --help                    Show this help message and exit
   -v, --version                 Show version and exit
 """
@@ -87,7 +79,7 @@ def toc_from_metadata(metadatafile):
     return toc
 
 
-def dump_text_toc(inputpdf, outputpdf=None, align_page_right=False):
+def dump_text_toc(inputpdf, outputpdf=None, align_page_left=False):
     """Dump the table of content of the given PDF to a text file"""
     with TemporaryDirectory() as tempdir:
         metadatafile = dump_metadata(inputpdf, tempdir)
@@ -95,10 +87,10 @@ def dump_text_toc(inputpdf, outputpdf=None, align_page_right=False):
     max_page_number_len = len(max(toc, key=lambda t: len(t[2]))[2])
     if not outputpdf:
         outputpdf = Path(inputpdf).with_suffix('.txt')
-    if align_page_right:
-        text_toc_entry_template = "{pagepadspace}{page} {descspace}{description}"
-    else:
+    if align_page_left:
         text_toc_entry_template = "{page}{pagepadspace} {descspace}{description}"
+    else:
+        text_toc_entry_template = "{pagepadspace}{page} {descspace}{description}"
     with open(outputpdf, 'w') as outfile:
         for description, level, page in toc:
             pagepadspace = ' ' * (max_page_number_len - len(page))
@@ -110,17 +102,26 @@ def dump_text_toc(inputpdf, outputpdf=None, align_page_right=False):
             print(text_toc_entry, file=outfile)
 
 
+def verify_page_alignment(toc):
+    """Return False if the page numbers are not properly right-aligned"""
+    if len({len(toc_entry[2]) for toc_entry in toc}) != 1:
+        return False
+    return True
+
+
 def load_toc(text_toc):
     """Reads the ToC from the text file and returns a list of tuple (description, level, page)"""
     toc = list()
     with open(text_toc) as f:
         for line in f:
-            m = re.search(r'(\d+) ( *)(.*)', line)
+            m = re.search(r'(\s*\d+) ( *)(.*)', line)
             if m:
                 page = m.group(1)
                 level = str((len(m.group(2))/2)+1)
                 description = m.group(3)
                 toc.append((description, level, page))
+    if not verify_page_alignment(toc):
+        raise Exception("Page numbers are not properly aligned.")
     return toc
 
 
@@ -135,7 +136,9 @@ def update_toc(inputpdf, tocfile, outputpdf=None, replace_toc=False):
                 toc += toc_from_metadata(metadatafile)
                 toc = sorted(toc, key=lambda t: int(t[2]))
         for description, level, page in toc:
-            metadata_toc_entry = BM_TEMPLATE.format(description=description, level=level, page=page)
+            metadata_toc_entry = BM_TEMPLATE.format(description=description,
+                                                    level=level,
+                                                    page=page.strip())
             metadata.append(metadata_toc_entry + '\n')
         with open(metadatafile, 'w') as f:
             f.write("".join(metadata))
@@ -151,6 +154,6 @@ def update_toc(inputpdf, tocfile, outputpdf=None, replace_toc=False):
 if __name__ == "__main__":
     args = docopt(__doc__, version='1.0')
     if args["dump"]:
-        dump_text_toc(args["<inputpdf>"], args["--output-toc"], args["--align-right"])
+        dump_text_toc(args["<inputpdf>"], args["--output-toc"], args["--align-left"])
     else:
         update_toc(args["<inputpdf>"], args["<tocfile>"], args["--output"], replace_toc=args["replace"])
