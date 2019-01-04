@@ -30,45 +30,6 @@ BookmarkPageNumber: {page}\
 CMD_DUMP_METADATA = "pdftk '{pdfname}' dump_data output {metadatafile}"
 
 
-def toc_from_metadata(filename):
-    toc = list()
-    with open(filename) as f:
-        lines = f.readlines()
-        i = 0
-        while i < len(lines):
-            if lines[i] == 'BookmarkBegin\n':
-                title = lines[i+1][14:].strip('\n').strip(' ')
-                level = int(lines[i+2][14:].strip('\n').strip(' '))
-                page = lines[i+3][19:].strip('\n').strip(' ')
-                toc.append((title, level, page))
-                i += 4
-            else:
-                i += 1
-
-        toc = sorted(toc, key=lambda t: int(t[2]))
-    return toc
-
-
-def add_toc_to_metadata(filename, toc, replace=False):
-    with TemporaryDirectory() as tempdir:
-        metadatafile = dump_metadata(filename, tempdir)
-        with open(metadatafile) as f:
-            lines = [l for l in f if not re.match('Bookmark.*', l)]
-            if not replace:
-                toc += toc_from_metadata(metadatafile)
-                toc = sorted(toc, key=lambda t: int(t[2]))
-        for t in toc:
-            bm = BM_TEMPLATE.format(title=t[0], level=t[1], page=t[2])
-            lines.append(bm + '\n')
-        metadatafile = os.path.join(tempdir, "metadata.txt")
-        with open(metadatafile, 'w') as f:
-            f.write("".join(lines))
-
-        cmd_update_metadata = "pdftk '{pdfname}' update_info {metadatafile} output '{pdfname}-new.pdf'".format(
-            pdfname=filename, metadatafile=metadatafile)
-        os.system(cmd_update_metadata)
-
-
 def dump_metadata(inputpdf, tempdir):
     """Dump the metadata of the pdf to a temp file in the given temp directory using pdftk"""
     metadatafile = os.path.join(tempdir, "metadata.txt")
@@ -112,6 +73,45 @@ def load_toc(inputpdf):
                 description = m.group(3)
                 toc.append((description, level, page))
     return toc
+
+
+def toc_from_metadata(filename):
+    toc = list()
+    with open(filename) as f:
+        lines = f.readlines()
+        i = 0
+        while i < len(lines):
+            if lines[i] == 'BookmarkBegin\n':
+                title = lines[i+1][14:].strip('\n').strip(' ')
+                level = int(lines[i+2][14:].strip('\n').strip(' '))
+                page = lines[i+3][19:].strip('\n').strip(' ')
+                toc.append((title, level, page))
+                i += 4
+            else:
+                i += 1
+
+        toc = sorted(toc, key=lambda t: int(t[2]))
+    return toc
+
+
+def add_toc_to_metadata(filename, toc, replace=False):
+    with TemporaryDirectory() as tempdir:
+        metadatafile = dump_metadata(filename, tempdir)
+        with open(metadatafile) as f:
+            lines = [l for l in f if not re.match('Bookmark.*', l)]
+            if not replace:
+                toc += toc_from_metadata(metadatafile)
+                toc = sorted(toc, key=lambda t: int(t[2]))
+        for t in toc:
+            bm = BM_TEMPLATE.format(title=t[0], level=t[1], page=t[2])
+            lines.append(bm + '\n')
+        metadatafile = os.path.join(tempdir, "metadata.txt")
+        with open(metadatafile, 'w') as f:
+            f.write("".join(lines))
+
+        cmd_update_metadata = "pdftk '{pdfname}' update_info {metadatafile} output '{pdfname}-new.pdf'".format(
+            pdfname=filename, metadatafile=metadatafile)
+        os.system(cmd_update_metadata)
 
 
 if __name__ == "__main__":
