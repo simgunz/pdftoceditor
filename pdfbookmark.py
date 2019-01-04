@@ -98,16 +98,17 @@ def dump_text_toc(inputpdf, outputpdf=None, align_page_right=False):
             print(text_toc_entry, file=outfile)
 
 
-def load_toc(filename):
+def load_toc(inputpdf):
+    """Reads the ToC from file and returns a list of tuple (description, level, page)"""
     toc = list()
-    with open(filename) as f:
-        for l in f:
-            m = re.search(r'(\d+) ( *)(.*)', l)
+    with open(inputpdf) as f:
+        for line in f:
+            m = re.search(r'(\d+) ( *)(.*)', line)
             if m:
-                title = m.group(3)
-                level = (len(m.group(2))/2)+1
                 page = m.group(1)
-                toc.append((title, level, page))
+                level = (len(m.group(2))/2)+1
+                description = m.group(3)
+                toc.append((description, level, page))
     return toc
 
 
