@@ -23,11 +23,12 @@ from tempfile import TemporaryDirectory
 
 BM_TEMPLATE = """\
 BookmarkBegin
-BookmarkTitle: {title}
+BookmarkTitle: {description}
 BookmarkLevel: {level}
 BookmarkPageNumber: {page}\
 """
 CMD_DUMP_METADATA = "pdftk '{pdfname}' dump_data output {metadatafile}"
+CMD_UPDATE_METADATA = "pdftk '{pdfname}' update_info {metadatafile} output '{pdfnameout}'"
 
 
 def dump_metadata(inputpdf, tempdir):
@@ -36,6 +37,10 @@ def dump_metadata(inputpdf, tempdir):
     cmd_dump_metadata = CMD_DUMP_METADATA.format(pdfname=inputpdf, metadatafile=metadatafile)
     os.system(cmd_dump_metadata)
     return metadatafile
+
+
+def strip_meta_desc(metadata_entry):
+    return re.search('[^:]*: ([^\n]*)', metadata_entry).group(1)
 
 
 def toc_from_metadata(metadatafile):
@@ -92,27 +97,26 @@ def load_toc(text_toc):
     return toc
 
 
-def strip_meta_desc(metadata_entry):
-    return re.search('[^:]*: ([^\n]*)', metadata_entry).group(1)
-
-
-def add_toc_to_metadata(filename, toc, replace=False):
+def update_toc(inputpdf, toc, outputpdf=None, replace_toc=False):
     with TemporaryDirectory() as tempdir:
-        metadatafile = dump_metadata(filename, tempdir)
+        metadatafile = dump_metadata(inputpdf, tempdir)
         with open(metadatafile) as f:
-            lines = [l for l in f if not re.match('Bookmark.*', l)]
-            if not replace:
+            # Acquire the metadata lines not related to the ToC
+            metadata = [l for l in f if not re.match('Bookmark.*', l)]
+            if not replace_toc:
                 toc += toc_from_metadata(metadatafile)
                 toc = sorted(toc, key=lambda t: int(t[2]))
-        for t in toc:
-            bm = BM_TEMPLATE.format(title=t[0], level=t[1], page=t[2])
-            lines.append(bm + '\n')
-        metadatafile = os.path.join(tempdir, "metadata.txt")
+        for description, level, page in toc:
+            metadata_toc_entry = BM_TEMPLATE.format(description=description, level=level, page=page)
+            metadata.append(metadata_toc_entry + '\n')
         with open(metadatafile, 'w') as f:
-            f.write("".join(lines))
-
-        cmd_update_metadata = "pdftk '{pdfname}' update_info {metadatafile} output '{pdfname}-new.pdf'".format(
-            pdfname=filename, metadatafile=metadatafile)
+            f.write("".join(metadata))
+        if not outputpdf:
+            fname, ext = inputpdf.rsplit('.', 1)
+            outputpdf = "{0}_updated_toc.{1}".format(fname, ext)
+        cmd_update_metadata = CMD_UPDATE_METADATA.format(pdfname=inputpdf,
+                                                         metadatafile=metadatafile,
+                                                         pdfnameout=outputpdf)
         os.system(cmd_update_metadata)
 
 
@@ -122,7 +126,7 @@ if __name__ == "__main__":
         dump_text_toc(args["<inputpdf>"], args["--output-toc"], args["--align-right"])
     elif args["replace"]:
         toc = load_toc(args["<tocfile>"])
-        add_toc_to_metadata(args["<inputpdf>"], toc, replace=True)
+        update_toc(args["<inputpdf>"], toc, args["--output"], replace_toc=True)
     elif args["append"]:
         toc = load_toc(args["<tocfile>"])
-        add_toc_to_metadata(args["<inputpdf>"], toc)
+        update_toc(args["<inputpdf>"], toc, args["--output"])
