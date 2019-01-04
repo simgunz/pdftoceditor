@@ -27,6 +27,7 @@ BookmarkTitle: {title}
 BookmarkLevel: {level:g}
 BookmarkPageNumber: {page}\
 """
+CMD_DUMP_METADATA = "pdftk '{pdfname}' dump_data output {metadatafile}"
 
 
 def toc_from_metadata(filename):
@@ -50,7 +51,7 @@ def toc_from_metadata(filename):
 
 def add_toc_to_metadata(filename, toc, replace=False):
     with TemporaryDirectory() as tempdir:
-        metadatafile = dump_toc(filename, tempdir)
+        metadatafile = dump_metadata(filename, tempdir)
         with open(metadatafile) as f:
             lines = [l for l in f if not re.match('Bookmark.*', l)]
             if not replace:
@@ -68,17 +69,18 @@ def add_toc_to_metadata(filename, toc, replace=False):
         os.system(cmd_update_metadata)
 
 
-def dump_toc(fname, tempdir):
+def dump_metadata(inputpdf, tempdir):
+    """Dump the metadata of the pdf to a temp file in the given temp directory using pdftk"""
     metadatafile = os.path.join(tempdir, "metadata.txt")
-    cmd_dump_metadata = "pdftk '{pdfname}' dump_data output {metadatafile}".format(
-        pdfname=fname, metadatafile=metadatafile)
+    cmd_dump_metadata = CMD_DUMP_METADATA.format(pdfname=inputpdf, metadatafile=metadatafile)
     os.system(cmd_dump_metadata)
     return metadatafile
 
 
 def dump_text_toc(inputpdf, outputpdf=None, align_page_right=False):
+    """Dump the table of content of the given PDF to a text file"""
     with TemporaryDirectory() as tempdir:
-        metadatafile = dump_toc(inputpdf, tempdir)
+        metadatafile = dump_metadata(inputpdf, tempdir)
         toc = toc_from_metadata(metadatafile)
     max_page_number_len = len(max(toc, key=lambda t: len(t[2]))[2])
     if not outputpdf:
