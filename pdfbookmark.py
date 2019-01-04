@@ -27,14 +27,14 @@ BookmarkTitle: {description}
 BookmarkLevel: {level}
 BookmarkPageNumber: {page}\
 """
-CMD_DUMP_METADATA = "pdftk '{pdfname}' dump_data output {metadatafile}"
-CMD_UPDATE_METADATA = "pdftk '{pdfname}' update_info {metadatafile} output '{pdfnameout}'"
+CMD_DUMP_METADATA = "pdftk '{inputpdf}' dump_data output {metadatafile}"
+CMD_UPDATE_METADATA = "pdftk '{inputpdf}' update_info {metadatafile} output '{outputpdf}'"
 
 
 def dump_metadata(inputpdf, tempdir):
     """Dump the metadata of the pdf to a temp file in the given temp directory using pdftk"""
     metadatafile = os.path.join(tempdir, "metadata.txt")
-    cmd_dump_metadata = CMD_DUMP_METADATA.format(pdfname=inputpdf, metadatafile=metadatafile)
+    cmd_dump_metadata = CMD_DUMP_METADATA.format(inputpdf=inputpdf, metadatafile=metadatafile)
     os.system(cmd_dump_metadata)
     return metadatafile
 
@@ -97,7 +97,8 @@ def load_toc(text_toc):
     return toc
 
 
-def update_toc(inputpdf, toc, outputpdf=None, replace_toc=False):
+def update_toc(inputpdf, tocfile, outputpdf=None, replace_toc=False):
+    toc = load_toc(tocfile)
     with TemporaryDirectory() as tempdir:
         metadatafile = dump_metadata(inputpdf, tempdir)
         with open(metadatafile) as f:
@@ -114,9 +115,9 @@ def update_toc(inputpdf, toc, outputpdf=None, replace_toc=False):
         if not outputpdf:
             fname, ext = inputpdf.rsplit('.', 1)
             outputpdf = "{0}_updated_toc.{1}".format(fname, ext)
-        cmd_update_metadata = CMD_UPDATE_METADATA.format(pdfname=inputpdf,
+        cmd_update_metadata = CMD_UPDATE_METADATA.format(inputpdf=inputpdf,
                                                          metadatafile=metadatafile,
-                                                         pdfnameout=outputpdf)
+                                                         outputpdf=outputpdf)
         os.system(cmd_update_metadata)
 
 
@@ -124,9 +125,5 @@ if __name__ == "__main__":
     args = docopt(__doc__, version='1.0')
     if args["dump"]:
         dump_text_toc(args["<inputpdf>"], args["--output-toc"], args["--align-right"])
-    elif args["replace"]:
-        toc = load_toc(args["<tocfile>"])
-        update_toc(args["<inputpdf>"], toc, args["--output"], replace_toc=True)
-    elif args["append"]:
-        toc = load_toc(args["<tocfile>"])
-        update_toc(args["<inputpdf>"], toc, args["--output"])
+    else:
+        update_toc(args["<inputpdf>"], args["<tocfile>"], args["--output"], replace_toc=args["replace"])
