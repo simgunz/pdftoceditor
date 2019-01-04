@@ -1,11 +1,13 @@
 #!/usr/bin/python
 """
-Usage: pdfbookmark.py [options] <inputpdf> [<bookmarkfile>]
+Usage:
+  pdfbookmark.py replace <inputpdf> <bookmarkfile>
+  pdfbookmark.py append <inputpdf> <bookmarkfile>
+  pdfbookmark.py dump <inputpdf> [<bookmarkfile>]
 
 Do something
 
 Options:
-  -d --dump                    Dump the bookmarks to a text file
   -r --align-right             Align page numbers to the right
 """
 
@@ -92,7 +94,7 @@ def load_toc(filename):
 
 if __name__ == "__main__":
     args = docopt(__doc__, version='1.0')
-    if args["--dump"]:
+    if args["dump"]:
         dump_toc(args["<inputpdf>"], args["<bookmarkfile>"], args["--align-right"])
     else:
         # toc = get_toc("Analisi dei dati.txt")
