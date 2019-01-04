@@ -24,7 +24,7 @@ from tempfile import TemporaryDirectory
 BM_TEMPLATE = """\
 BookmarkBegin
 BookmarkTitle: {title}
-BookmarkLevel: {level:g}
+BookmarkLevel: {level}
 BookmarkPageNumber: {page}\
 """
 CMD_DUMP_METADATA = "pdftk '{pdfname}' dump_data output {metadatafile}"
@@ -61,35 +61,37 @@ def dump_text_toc(inputpdf, outputpdf=None, align_page_right=False):
             print(text_toc_entry, file=outfile)
 
 
-def load_toc(inputpdf):
-    """Reads the ToC from file and returns a list of tuple (description, level, page)"""
+def load_toc(text_toc):
+    """Reads the ToC from the text file and returns a list of tuple (description, level, page)"""
     toc = list()
-    with open(inputpdf) as f:
+    with open(text_toc) as f:
         for line in f:
             m = re.search(r'(\d+) ( *)(.*)', line)
             if m:
                 page = m.group(1)
-                level = (len(m.group(2))/2)+1
+                level = str((len(m.group(2))/2)+1)
                 description = m.group(3)
                 toc.append((description, level, page))
     return toc
 
 
-def toc_from_metadata(filename):
-    toc = list()
-    with open(filename) as f:
-        lines = f.readlines()
-        i = 0
-        while i < len(lines):
-            if lines[i] == 'BookmarkBegin\n':
-                title = lines[i+1][14:].strip('\n').strip(' ')
-                level = int(lines[i+2][14:].strip('\n').strip(' '))
-                page = lines[i+3][19:].strip('\n').strip(' ')
-                toc.append((title, level, page))
-                i += 4
-            else:
-                i += 1
+def strip_meta_desc(metadata_entry):
+    return re.search('[^:]*: ([^\n]*)', metadata_entry).group(1)
 
+
+def toc_from_metadata(metadatafile):
+    """Reads the ToC from the PDF metadata and returns a list of tuple (description, level, page)"""
+    toc = list()
+    with open(metadatafile) as f:
+        lines = f.readlines()
+        indices = [i for i, s in enumerate(lines) if 'BookmarkBegin' in s]
+        for i in indices:
+            rawdescription, rawlevel, rawpage = tuple(lines[i+1:i+4])
+            description = strip_meta_desc(rawdescription)
+            level = strip_meta_desc(rawlevel)
+            page = strip_meta_desc(rawpage)
+            toc.append((description, level, page))
+        # Sort by page number
         toc = sorted(toc, key=lambda t: int(t[2]))
     return toc
 
