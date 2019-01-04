@@ -1,14 +1,15 @@
 #!/usr/bin/python
 """
 Usage:
-  pdfbookmark.py replace <inputpdf> <bookmarkfile>
-  pdfbookmark.py append <inputpdf> <bookmarkfile>
-  pdfbookmark.py dump <inputpdf> [<bookmarkfile>]
+  pdfbookmark.py replace [options] <inputpdf> <bookmarkfile>
+  pdfbookmark.py append [options] <inputpdf> <bookmarkfile>
+  pdfbookmark.py dump [options] <inputpdf>
 
 Do something
 
 Options:
-  -r --align-right             Align page numbers to the right
+  -o FILE, --output=FILE      Output file name.
+  -r, --align-right           Align page numbers to the right.
 """
 
 import os
@@ -35,7 +36,7 @@ def get_toc_from_metadata(filename):
         while i < len(lines):
             if lines[i] == 'BookmarkBegin\n':
                 title = lines[i+1][14:].strip('\n').strip(' ')
-                level = lines[i+2][14:].strip('\n').strip(' ')
+                level = int(lines[i+2][14:].strip('\n').strip(' '))
                 page = lines[i+3][19:].strip('\n').strip(' ')
                 toc.append((title, level, page))
                 i += 4
@@ -50,9 +51,10 @@ def add_toc_to_metadata(filename, toc, replace=False):
     with TemporaryDirectory() as tempdir:
         metadatafile = dump_toc(filename, tempdir)
         with open(metadatafile) as f:
-            lines = f.readlines()
-        if replace:
-            lines = [l for l in lines if not re.match('Bookmark.*', l)]
+            lines = [l for l in f if not re.match('Bookmark.*', l)]
+            if not replace:
+                toc += get_toc_from_metadata(metadatafile)
+                toc = sorted(toc, key=lambda t: int(t[2]))
         for t in toc:
             bm = BM_TEMPLATE.format(title=t[0], level=t[1], page=t[2])
             lines.append(bm + '\n')
@@ -108,7 +110,7 @@ def load_toc(filename):
 if __name__ == "__main__":
     args = docopt(__doc__, version='1.0')
     if args["dump"]:
-        dump_toc_text(args["<inputpdf>"], args["<bookmarkfile>"], args["--align-right"])
+        dump_toc_text(args["<inputpdf>"], args["--output"], args["--align-right"])
     elif args["replace"]:
         toc = load_toc(args["<bookmarkfile>"])
         add_toc_to_metadata(args["<inputpdf>"], toc, replace=True)
