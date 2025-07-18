@@ -21,7 +21,7 @@ class TestDumpTextToc:
             test_pdf_copy = tmp_path / "test.pdf"
             test_pdf_copy.write_bytes(test_pdf_path.read_bytes())
 
-            dump_text_toc(str(test_pdf_copy))
+            dump_text_toc(test_pdf_copy)
 
             # Check that the output file was created with .txt extension
             output_file = tmp_path / "test.txt"
@@ -52,7 +52,7 @@ class TestDumpTextToc:
         """Test dumping ToC to custom output file"""
         output_file = tmp_path / "custom_toc.txt"
 
-        dump_text_toc(str(test_pdf_path), str(output_file))
+        dump_text_toc(test_pdf_path, output_file)
 
         # Check that the custom output file was created
         assert output_file.exists()
@@ -75,9 +75,7 @@ class TestDumpTextToc:
         """Test dumping ToC with left-aligned page numbers"""
         output_file = tmp_path / "left_aligned_toc.txt"
 
-        dump_text_toc(
-            str(test_multi_page_pdf_path), str(output_file), align_page_left=True
-        )
+        dump_text_toc(test_multi_page_pdf_path, output_file, align_page_left=True)
 
         # Check that the output file was created
         assert output_file.exists()
@@ -104,9 +102,7 @@ class TestDumpTextToc:
         """Test dumping ToC with right-aligned page numbers (default)"""
         output_file = tmp_path / "right_aligned_toc.txt"
 
-        dump_text_toc(
-            str(test_multi_page_pdf_path), str(output_file), align_page_left=False
-        )
+        dump_text_toc(test_multi_page_pdf_path, output_file, align_page_left=False)
 
         # Check that the output file was created
         assert output_file.exists()
@@ -137,4 +133,4 @@ class TestDumpTextToc:
         # This should raise a FileNotFoundError when pdftk fails to create metadata
         # and toc_from_metadata tries to open the non-existent metadata file
         with pytest.raises(FileNotFoundError):
-            dump_text_toc(str(nonexistent_pdf), str(output_file))
+            dump_text_toc(nonexistent_pdf, output_file)

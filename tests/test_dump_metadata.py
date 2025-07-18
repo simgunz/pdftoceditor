@@ -8,7 +8,7 @@ class TestDumpMetadata:
 
     def test_dump_metadata_creates_file(self, test_pdf_path, tmp_path):
         """Test that dump_metadata creates a metadata file"""
-        metadata_file = dump_metadata(str(test_pdf_path), str(tmp_path))
+        metadata_file = dump_metadata(test_pdf_path, tmp_path)
         metadata_path = Path(metadata_file)
 
         # Check that the metadata file was created
@@ -54,18 +54,18 @@ BookmarkPageNumber: 8"""
 
     def test_dump_metadata_file_location(self, test_pdf_path, tmp_path):
         """Test that dump_metadata creates file in correct location"""
-        metadata_file = dump_metadata(str(test_pdf_path), str(tmp_path))
+        metadata_file = dump_metadata(test_pdf_path, tmp_path)
         expected_path = tmp_path / "metadata.txt"
 
-        assert metadata_file == str(expected_path)
+        assert metadata_file == expected_path
         assert expected_path.exists()
 
     def test_dump_metadata_nonexistent_pdf(self, tmp_path):
         """Test dump_metadata with non-existent PDF file"""
         nonexistent_pdf = "nonexistent.pdf"
 
-        metadata_file = dump_metadata(nonexistent_pdf, str(tmp_path))
+        metadata_file = dump_metadata(nonexistent_pdf, tmp_path)
         expected_path = tmp_path / "metadata.txt"
 
         # Function should still create the file path, but pdftk will fail
-        assert metadata_file == str(expected_path)
+        assert metadata_file == expected_path

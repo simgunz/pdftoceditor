@@ -47,7 +47,7 @@ BookmarkPageNumber: 8
         metadata_file = tmp_path / "metadata.txt"
         metadata_file.write_text(sample_metadata)
 
-        toc = toc_from_metadata(str(metadata_file))
+        toc = toc_from_metadata(metadata_file)
 
         # Check that we got the expected number of entries
         assert len(toc) == 7
@@ -70,7 +70,7 @@ BookmarkPageNumber: 8
         metadata_file = tmp_path / "empty_metadata.txt"
         metadata_file.write_text("")
 
-        toc = toc_from_metadata(str(metadata_file))
+        toc = toc_from_metadata(metadata_file)
         assert toc == []
 
     def test_toc_from_metadata_no_bookmarks(self, tmp_path):
@@ -87,7 +87,7 @@ NumberOfPages: 5
         metadata_file = tmp_path / "no_bookmarks.txt"
         metadata_file.write_text(metadata_no_bookmarks)
 
-        toc = toc_from_metadata(str(metadata_file))
+        toc = toc_from_metadata(metadata_file)
         assert toc == []
 
     def test_toc_from_metadata_sorting(self, tmp_path):
@@ -110,7 +110,7 @@ BookmarkPageNumber: 8
         metadata_file = tmp_path / "unsorted.txt"
         metadata_file.write_text(unsorted_metadata)
 
-        toc = toc_from_metadata(str(metadata_file))
+        toc = toc_from_metadata(metadata_file)
 
         # Check that entries are sorted by page number
         assert len(toc) == 3

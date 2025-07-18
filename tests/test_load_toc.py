@@ -17,7 +17,7 @@ class TestLoadToc:
         toc_file = tmp_path / "test_toc.txt"
         toc_file.write_text(toc_content)
 
-        toc = load_toc(str(toc_file))
+        toc = load_toc(toc_file)
 
         # Check that we got the expected number of entries
         assert len(toc) == 5
@@ -41,7 +41,7 @@ class TestLoadToc:
         toc_file = tmp_path / "toc_with_subsections.txt"
         toc_file.write_text(toc_content)
 
-        toc = load_toc(str(toc_file))
+        toc = load_toc(toc_file)
 
         assert len(toc) == 6
 
@@ -63,7 +63,7 @@ class TestLoadToc:
         toc_file.write_text(misaligned_content)
 
         with pytest.raises(Exception, match="Page numbers are not properly aligned"):
-            load_toc(str(toc_file))
+            load_toc(toc_file)
 
     def test_load_toc_empty_file(self, tmp_path):
         """Test loading empty table of contents file"""
@@ -72,7 +72,7 @@ class TestLoadToc:
 
         # Empty file should raise an exception due to page alignment check
         with pytest.raises(Exception, match="Page numbers are not properly aligned"):
-            load_toc(str(toc_file))
+            load_toc(toc_file)
 
     def test_load_toc_whitespace_only(self, tmp_path):
         """Test loading file with only whitespace"""
@@ -81,7 +81,7 @@ class TestLoadToc:
 
         # File with only whitespace should raise an exception due to page alignment check
         with pytest.raises(Exception, match="Page numbers are not properly aligned"):
-            load_toc(str(toc_file))
+            load_toc(toc_file)
 
     def test_load_toc_large_page_numbers(self, tmp_path):
         """Test loading ToC with large page numbers"""
@@ -92,7 +92,7 @@ class TestLoadToc:
         toc_file = tmp_path / "large_pages.txt"
         toc_file.write_text(toc_content)
 
-        toc = load_toc(str(toc_file))
+        toc = load_toc(toc_file)
 
         assert len(toc) == 3
         assert toc[0] == ("Chapter 1", "1.0", "100")
