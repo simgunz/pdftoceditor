@@ -1,10 +1,6 @@
-from pathlib import Path
 import pytest
-import sys
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from pdftoceditor import load_toc
+from pdftoceditor.pdftoceditor import load_toc
 
 
 class TestLoadToc:

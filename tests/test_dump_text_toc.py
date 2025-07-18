@@ -1,10 +1,8 @@
-import pytest
 from pathlib import Path
-import sys
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+import pytest
 
-from pdftoceditor import dump_text_toc
+from pdftoceditor.pdftoceditor import dump_text_toc
 
 
 class TestDumpTextToc:
@@ -77,7 +75,9 @@ class TestDumpTextToc:
         """Test dumping ToC with left-aligned page numbers"""
         output_file = tmp_path / "left_aligned_toc.txt"
 
-        dump_text_toc(str(test_multi_page_pdf_path), str(output_file), align_page_left=True)
+        dump_text_toc(
+            str(test_multi_page_pdf_path), str(output_file), align_page_left=True
+        )
 
         # Check that the output file was created
         assert output_file.exists()
@@ -104,7 +104,9 @@ class TestDumpTextToc:
         """Test dumping ToC with right-aligned page numbers (default)"""
         output_file = tmp_path / "right_aligned_toc.txt"
 
-        dump_text_toc(str(test_multi_page_pdf_path), str(output_file), align_page_left=False)
+        dump_text_toc(
+            str(test_multi_page_pdf_path), str(output_file), align_page_left=False
+        )
 
         # Check that the output file was created
         assert output_file.exists()
