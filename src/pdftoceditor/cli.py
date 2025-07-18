@@ -43,4 +43,3 @@ def cli(
     """Engage with pdftoceditor using this CLI."""
     if log_level is not None:
         logs.set_level(log_level.value)
-

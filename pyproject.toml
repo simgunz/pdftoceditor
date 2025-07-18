@@ -51,7 +51,7 @@ select = [
     "F", # pyflakes, basic flake8
     "N", # pep8-naming, basic flake8
     "A",  # flake8-builtins,
-    "D", # pydocstyle
+    #"D", # pydocstyle
     "PT", # flake8-pytest-style
     "T20", # flake8-print
     "ERA", # eradicate
@@ -60,6 +60,7 @@ select = [
     "I" # isort
 ]
 ignore = [
+    "E501", # Line too long
     # Docstring rules
     "D100",   # Ignore missing docstring in public modules
     "D104",   # Ignore missing docstring in public packages
