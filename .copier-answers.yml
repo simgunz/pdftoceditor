@@ -18,7 +18,7 @@ project_short_description: "Python tool for editing PDF table of contents using 
     \ text\n  files with replace, append, and dump operations."
 python_version: '3.12'
 testing_framework: pytest
-type_checker: mypy
+type_checker: none
 type_checker_strictness: strict
 use_jupyter_notebooks: false
 use_lint_strict_rules: true
