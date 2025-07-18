@@ -1,0 +1,26 @@
+_commit: 2.1.0-90-g1f80d0b
+_src_path: https://github.com/flowtaleai/copier-python-uv
+author_email: simgunz@gmail.com
+author_name: Simone Gaiarin
+distribution_name: pdftoceditor
+generate_dockerfile: false
+generate_docs: none
+generate_example_code: false
+git_hosting: github
+ide: vscode
+license: MIT license
+lint_dockerfile: false
+max_line_length: 88
+package_name: pdftoceditor
+package_type: cli
+project_name: ''
+project_short_description: "Python tool for editing PDF table of contents using simple\
+    \ text\n  files with replace, append, and dump operations."
+python_version: '3.12'
+testing_framework: pytest
+type_checker: mypy
+type_checker_strictness: strict
+use_jupyter_notebooks: false
+use_lint_strict_rules: true
+uv_version: 0.7.13
+version: 0.0.0
