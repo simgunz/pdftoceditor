@@ -1,43 +1,8 @@
-#!/usr/bin/python
-"""Usage:
-  pdftoceditor.py replace [--output  FILE] <inputpdf> <tocfile>
-  pdftoceditor.py append  [--output FILE] <inputpdf> <tocfile>
-  pdftoceditor.py dump [--output-toc FILE --align-left] <inputpdf>
-
-Update the table of content of a PDF using the one specified in a text file.
-
-Format of table of content text file:
-  1 Section 1
-  2   Subsection 1.1
-  3   Subsection 1.2
-  4     Subsubsection 1.1.1
- 10 Section 2
-100 Section 3
-
-
-Operations:
-  replace <inputpdf> <tocfile>  Replace the table of content of <inputpdf> with the one
-                                specified in <tocfile>
-  append <inputpdf> <tocfile>   Append the table of content specified in <tocfile> to the existing
-                                one of <inputpdf>
-  dump <inputpdf>               Dump the table of content of <inputpdf> to a text file
-
-
-Options:
-  -o FILE, --output=FILE        Output PDF file with updated table of content.
-  -t FILE, --output-toc=FILE    Output table of content text file.
-  -r, --align-left              Align the page numbers to the left on the text table of content.
-  -h, --help                    Show this help message and exit
-  -v, --version                 Show version and exit
-"""
-
 import os
 import os.path
 import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
-
-from docopt import docopt
 
 BM_TEMPLATE = """\
 BookmarkBegin
@@ -156,16 +121,3 @@ def update_toc(inputpdf, tocfile, outputpdf=None, replace_toc=False):
             inputpdf=inputpdf, metadatafile=metadatafile, outputpdf=outputpdf
         )
         os.system(cmd_update_metadata)
-
-
-if __name__ == "__main__":
-    args = docopt(__doc__, version="1.0")
-    if args["dump"]:
-        dump_text_toc(args["<inputpdf>"], args["--output-toc"], args["--align-left"])
-    else:
-        update_toc(
-            args["<inputpdf>"],
-            args["<tocfile>"],
-            args["--output"],
-            replace_toc=args["replace"],
-        )
