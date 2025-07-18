@@ -6,10 +6,9 @@ from typing import Annotated, Optional
 
 import typer
 
-from pdftoceditor import __version__, logs
-from pdftoceditor.logs import LogLevel
+from pdftoceditor import __version__
 
-app = typer.Typer()
+app = typer.Typer(no_args_is_help=True)
 
 
 def version_callback(value: bool) -> None:
@@ -21,14 +20,6 @@ def version_callback(value: bool) -> None:
 
 @app.command()
 def cli(
-    log_level: Annotated[
-        Optional[LogLevel],
-        typer.Option(
-            case_sensitive=False,
-            envvar="LOG_LEVEL",
-            help="Set the logging level.",
-        ),
-    ] = LogLevel.INFO,
     version: Annotated[
         Optional[bool],
         typer.Option(
@@ -41,5 +32,4 @@ def cli(
     ] = None,
 ) -> None:
     """Engage with pdftoceditor using this CLI."""
-    if log_level is not None:
-        logs.set_level(log_level.value)
+    pass
