@@ -136,7 +136,7 @@ def dump(
             "--output",
             "-o",
             help="Output table of contents text file",
-            show_default="PDF filename with .txt extension",
+            show_default="PDF filename with _toc.txt extension",
         ),
     ] = None,
     pages_alignment: Annotated[
@@ -198,7 +198,7 @@ def replace(
             "--output",
             "-o",
             help="Output PDF file with updated table of contents",
-            show_default="PDF filename with '_updated_toc' suffix",
+            show_default="PDF filename with '_new' suffix",
         ),
     ] = None,
     password: Annotated[
@@ -249,7 +249,7 @@ def append(
             "--output",
             "-o",
             help="Output PDF file with updated table of contents",
-            show_default="PDF filename with '_updated_toc' suffix",
+            show_default="PDF filename with '_new' suffix",
         ),
     ] = None,
     password: Annotated[

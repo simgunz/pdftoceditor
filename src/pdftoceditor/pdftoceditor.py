@@ -66,7 +66,7 @@ TOC_TEMPLATE_LEFT_ALIGN = "{page}{padding} {indent}{description}"
 TOC_TEMPLATE_RIGHT_ALIGN = "{padding}{page} {indent}{description}"
 
 # Update ToC constants
-UPDATE_SUFFIX = "_updated_toc"
+UPDATE_SUFFIX = "_new"
 
 BM_TEMPLATE = """\
 BookmarkBegin
@@ -270,7 +270,9 @@ def dump_text_toc(
 
     # Determine output path
     if not output_toc_path:
-        output_toc_path = input_pdf_path.with_suffix(".txt")
+        output_toc_path = input_pdf_path.with_stem(
+            f"{input_pdf_path.stem}_toc"
+        ).with_suffix(".txt")
 
     # Format and write ToC entries
     alignment = PageAlignment.LEFT if align_page_left else PageAlignment.RIGHT

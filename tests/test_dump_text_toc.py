@@ -20,8 +20,8 @@ def test_dump_text_toc_default_output(basic_with_toc_pdf_path, tmp_path):
 
         dump_text_toc(test_pdf_copy)
 
-        # Check that the output file was created with .txt extension
-        output_file = tmp_path / "test.txt"
+        # Check that the output file was created with _toc.txt extension
+        output_file = tmp_path / "test_toc.txt"
         assert output_file.exists()
 
         # Check that the file contains ToC content

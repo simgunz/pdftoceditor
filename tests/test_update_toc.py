@@ -87,10 +87,10 @@ def test_append_toc_default_output_path(basic_no_toc_pdf_path, tmp_path):
     toc_file = tmp_path / "toc.txt"
     toc_file.write_text(toc_content)
 
-    # Don't specify output path - should create file with _updated_toc suffix
+    # Don't specify output path - should create file with _new suffix
     update_toc(test_pdf, toc_file, replace_toc=False)
 
-    expected_output = test_pdf.with_stem("test_updated_toc")
+    expected_output = test_pdf.with_stem("test_new")
     assert expected_output.exists()
 
 
