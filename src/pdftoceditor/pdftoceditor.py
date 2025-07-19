@@ -13,6 +13,30 @@ class EmptyTocError(Exception):
     pass
 
 
+class PdfProtectionError(Exception):
+    """Base exception for PDF protection-related errors."""
+
+    pass
+
+
+class PasswordRequiredError(PdfProtectionError):
+    """Raised when PDF requires a password to access."""
+
+    pass
+
+
+class UnsupportedEncryptionError(PdfProtectionError):
+    """Raised when PDF uses encryption that pdftk cannot handle."""
+
+    pass
+
+
+class InvalidPdfError(PdfProtectionError):
+    """Raised when PDF file is corrupted or invalid."""
+
+    pass
+
+
 class PageAlignment(Enum):
     LEFT = "left"
     RIGHT = "right"
@@ -54,6 +78,32 @@ BookmarkPageNumber: {page}\
 
 # Private/Helper Functions
 # ========================
+
+
+def parse_pdftk_error(stderr: str, pdf_path: Path) -> None:
+    """Parse pdftk error output and raise appropriate exceptions."""
+    error_text = stderr.lower()
+
+    if "owner or user password required" in error_text:
+        raise PasswordRequiredError(f"PDF '{pdf_path}' requires a password to access")
+    elif "unknown.encryption.type" in error_text:
+        raise UnsupportedEncryptionError(
+            f"PDF '{pdf_path}' uses unsupported encryption. "
+            "Please decrypt the PDF with a modern tool first."
+        )
+    elif "failed to open input pdf file" in error_text:
+        if "password" in error_text:
+            raise PasswordRequiredError(
+                f"PDF '{pdf_path}' requires a password to access"
+            )
+        else:
+            raise InvalidPdfError(
+                f"Cannot open PDF '{pdf_path}'. File may be corrupted or invalid."
+            )
+    elif "invalid pdf" in error_text:
+        raise InvalidPdfError(f"PDF '{pdf_path}' is invalid or corrupted")
+    elif stderr.strip():  # Any other error
+        raise PdfProtectionError(f"Error processing PDF '{pdf_path}': {stderr.strip()}")
 
 
 def strip_meta_desc(metadata_entry: str) -> str:
@@ -108,12 +158,19 @@ def validate_toc_format(text_toc_lines: list[str]) -> None:
         raise ValueError("Page numbers are not properly aligned")
 
 
-def dump_metadata(input_pdf_path: Path, metadata_file_path: Path) -> None:
+def dump_metadata(
+    input_pdf_path: Path, metadata_file_path: Path, password: Optional[str] = None
+) -> None:
     """Dump the metadata of the pdf to the specified file using pdftk"""
-    subprocess.run(
-        ["pdftk", str(input_pdf_path), "dump_data", "output", str(metadata_file_path)],
-        check=True,
-    )
+    cmd = ["pdftk", str(input_pdf_path)]
+    if password:
+        cmd.extend(["input_pw", password])
+    cmd.extend(["dump_data", "output", str(metadata_file_path)])
+
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as e:
+        parse_pdftk_error(e.stderr, input_pdf_path)
 
 
 def load_metadata_toc(metadata_file_path: Path) -> List[TocEntry]:
@@ -196,6 +253,7 @@ def dump_text_toc(
     input_pdf_path: Path,
     output_toc_path: Optional[Path] = None,
     align_page_left: bool = False,
+    password: Optional[str] = None,
 ) -> None:
     """Dump the table of content of the given PDF to a text file"""
     # Extract ToC from PDF metadata
@@ -203,7 +261,7 @@ def dump_text_toc(
         mode="w+", suffix=".txt", delete_on_close=False
     ) as temp_file:
         metadata_file_path = Path(temp_file.name)
-        dump_metadata(input_pdf_path, metadata_file_path)
+        dump_metadata(input_pdf_path, metadata_file_path, password)
         toc = load_metadata_toc(metadata_file_path)
 
     # Check if ToC is empty
@@ -228,6 +286,7 @@ def update_toc(
     toc_file_path: Path,
     output_pdf_path: Optional[Path] = None,
     replace_toc: bool = False,
+    password: Optional[str] = None,
 ) -> None:
     """Update the table of contents of the PDF with new entries"""
     new_toc = load_text_toc(toc_file_path)
@@ -236,7 +295,7 @@ def update_toc(
         mode="w+", suffix=".txt", delete_on_close=False
     ) as temp_file:
         metadata_file_path = Path(temp_file.name)
-        dump_metadata(input_pdf_path, metadata_file_path)
+        dump_metadata(input_pdf_path, metadata_file_path, password)
 
         # Filter out existing bookmarks from metadata
         metadata_lines = metadata_file_path.read_text().splitlines(keepends=True)
@@ -269,14 +328,19 @@ def update_toc(
             f"{input_pdf_path.stem}{UPDATE_SUFFIX}"
         )
 
-        subprocess.run(
+        cmd = ["pdftk", str(input_pdf_path)]
+        if password:
+            cmd.extend(["input_pw", password])
+        cmd.extend(
             [
-                "pdftk",
-                str(input_pdf_path),
                 "update_info",
                 str(metadata_file_path),
                 "output",
                 str(output_path),
-            ],
-            check=True,
+            ]
         )
+
+        try:
+            subprocess.run(cmd, check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as e:
+            parse_pdftk_error(e.stderr, input_pdf_path)

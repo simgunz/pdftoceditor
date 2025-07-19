@@ -10,6 +10,8 @@ import typer
 from pdftoceditor import __version__
 from pdftoceditor.pdftoceditor import (
     EmptyTocError,
+    PasswordRequiredError,
+    PdfProtectionError,
     dump_text_toc,
     update_toc,
     validate_pdftk_installed,
@@ -109,13 +111,32 @@ def dump(
             help="Align the page numbers to the left on the text table of content",
         ),
     ] = False,
+    password: Annotated[
+        Optional[str],
+        typer.Option(
+            "--password",
+            "-p",
+            envvar="PDF_PASSWORD",
+            show_default=False,
+            help="User password to open protected PDF.",
+        ),
+    ] = None,
 ) -> None:
     """Extract the existing table of contents from a PDF to a text file."""
     if output_toc_path:
         validate_output_directory(output_toc_path)
 
     try:
-        dump_text_toc(input_pdf_path, output_toc_path, align_left)
+        dump_text_toc(input_pdf_path, output_toc_path, align_left, password)
+    except PasswordRequiredError:
+        typer.echo(
+            f"Error: PDF '{input_pdf_path}' requires a password. Use --password option.",
+            err=True,
+        )
+        raise typer.Exit(1)
+    except PdfProtectionError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(1)
     except EmptyTocError:
         typer.echo(
             f"Error: The PDF '{input_pdf_path}' contains no table of contents to extract.",
@@ -154,11 +175,34 @@ def replace(
             show_default="input filename with '_updated_toc' suffix, next to original PDF",
         ),
     ] = None,
+    password: Annotated[
+        Optional[str],
+        typer.Option(
+            "--password",
+            "-p",
+            envvar="PDF_PASSWORD",
+            show_default=False,
+            help="User password to open protected PDF.",
+        ),
+    ] = None,
 ) -> None:
     """Replace the PDF's table of contents with entries from a text file."""
     if output:
         validate_output_directory(output)
-    update_toc(input_pdf_path, toc_file_path, output, replace_toc=True)
+
+    try:
+        update_toc(
+            input_pdf_path, toc_file_path, output, replace_toc=True, password=password
+        )
+    except PasswordRequiredError:
+        typer.echo(
+            f"Error: PDF '{input_pdf_path}' requires a password. Use --password option.",
+            err=True,
+        )
+        raise typer.Exit(1)
+    except PdfProtectionError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(1)
 
 
 @app.command()
@@ -191,8 +235,31 @@ def append(
             show_default="input filename with '_updated_toc' suffix, next to original PDF",
         ),
     ] = None,
+    password: Annotated[
+        Optional[str],
+        typer.Option(
+            "--password",
+            "-p",
+            envvar="PDF_PASSWORD",
+            show_default=False,
+            help="User password to open protected PDF.",
+        ),
+    ] = None,
 ) -> None:
     """Add new table of contents entries to the existing PDF bookmarks."""
     if output:
         validate_output_directory(output)
-    update_toc(input_pdf_path, toc_file_path, output, replace_toc=False)
+
+    try:
+        update_toc(
+            input_pdf_path, toc_file_path, output, replace_toc=False, password=password
+        )
+    except PasswordRequiredError:
+        typer.echo(
+            f"Error: PDF '{input_pdf_path}' requires a password. Use --password option.",
+            err=True,
+        )
+        raise typer.Exit(1)
+    except PdfProtectionError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(1)
