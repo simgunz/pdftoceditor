@@ -115,7 +115,7 @@ def test_cli_accepts_existing_output_directory(tmp_path):
 
     with patch("shutil.which", return_value="/usr/bin/pdftk"):
         with patch("subprocess.run") as mock_subprocess:
-            with patch("pdftoceditor.pdftoceditor.toc_from_metadata", return_value=[]):
+            with patch("pdftoceditor.pdftoceditor.load_metadata_toc", return_value=[]):
                 result = runner.invoke(
                     app, ["dump", str(test_pdf), "--output-toc", str(output_path)]
                 )

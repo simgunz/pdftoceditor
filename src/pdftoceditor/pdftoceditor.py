@@ -43,7 +43,7 @@ def dump_metadata(input_pdf_path: Path, metadata_file_path: Path) -> None:
     )
 
 
-def toc_from_metadata(metadata_file_path: Path) -> List[TocEntry]:
+def load_metadata_toc(metadata_file_path: Path) -> List[TocEntry]:
     """Reads the ToC from the PDF metadata and returns a list of TocEntry objects"""
     with metadata_file_path.open() as f:
         lines = f.readlines()
@@ -63,7 +63,7 @@ def toc_from_metadata(metadata_file_path: Path) -> List[TocEntry]:
         return sorted(toc, key=lambda entry: int(entry.page))
 
 
-def load_toc(toc_file_path: Path) -> List[TocEntry]:
+def load_text_toc(toc_file_path: Path) -> List[TocEntry]:
     """Reads the ToC from the text file and returns a list of TocEntry objects"""
     toc = list()
     with toc_file_path.open() as f:
@@ -104,7 +104,7 @@ def dump_text_toc(
     ) as temp_file:
         metadata_file_path = Path(temp_file.name)
         dump_metadata(input_pdf_path, metadata_file_path)
-        toc = toc_from_metadata(metadata_file_path)
+        toc = load_metadata_toc(metadata_file_path)
     max_page_number_len = len(max(toc, key=lambda entry: len(entry.page)).page)
     if not output_toc_path:
         output_toc_path = input_pdf_path.with_suffix(".txt")
@@ -132,7 +132,7 @@ def update_toc(
     replace_toc: bool = False,
 ) -> None:
     """Update the table of contents of the PDF with new entries"""
-    toc = load_toc(toc_file_path)
+    toc = load_text_toc(toc_file_path)
     with tempfile.NamedTemporaryFile(
         mode="w+", suffix=".txt", delete_on_close=False
     ) as temp_file:
@@ -144,7 +144,7 @@ def update_toc(
                 line for line in metadata_file if not re.match("Bookmark.*", line)
             ]
             if not replace_toc:
-                toc += toc_from_metadata(metadata_file_path)
+                toc += load_metadata_toc(metadata_file_path)
                 toc = sorted(toc, key=lambda entry: int(entry.page))
         for description, level, page in toc:
             metadata_toc_entry = BM_TEMPLATE.format(
