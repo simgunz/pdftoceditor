@@ -13,7 +13,7 @@ from pdftoceditor.pdftoceditor import dump_text_toc, update_toc
 app = typer.Typer(
     no_args_is_help=True,
     rich_markup_mode="markdown",
-    help="""Update the table of content of a PDF using a text file.
+    help="""Edit a PDF table of contents using simple text files.
 
     **TOC file format**\n
     \n
@@ -39,6 +39,22 @@ def version_callback(value: bool) -> None:
     if value:
         typer.echo(f"pdftoceditor version {__version__}")
         raise typer.Exit()
+
+
+@app.callback()
+def main(
+    version: Annotated[
+        Optional[bool],
+        typer.Option(
+            "--version",
+            "-V",
+            callback=version_callback,
+            is_eager=True,
+            help="Show the application's version and exit",
+        ),
+    ] = None,
+) -> None:
+    pass
 
 
 @app.command()
