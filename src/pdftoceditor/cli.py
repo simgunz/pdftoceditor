@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -35,6 +36,40 @@ def validate_output_directory(output_path: Path) -> None:
     parent = output_path.parent
     if not parent.exists():
         raise typer.BadParameter(f"Output directory does not exist: {parent}")
+
+
+def get_pdf_password(prompt_for_password: bool) -> Optional[str]:
+    """Get PDF password from flag prompting or environment variable.
+
+    Args:
+        prompt_for_password: If True, prompt user for password
+
+    Returns:
+        Password string or None if no password needed
+    """
+    if prompt_for_password:
+        return typer.prompt("Password", hide_input=True)
+    return os.environ.get("PDF_PASSWORD")
+
+
+def handle_pdf_error(e: Exception, input_pdf_path: Path) -> None:
+    """Handle common PDF protection errors with consistent messaging."""
+    if isinstance(e, PasswordRequiredError):
+        typer.echo(
+            f"Error: PDF '{input_pdf_path}' requires a password.\n"
+            "Use --password to prompt for password, or set PDF_PASSWORD environment variable.",
+            err=True,
+        )
+    elif isinstance(e, PdfProtectionError):
+        typer.echo(f"Error: {e}", err=True)
+    elif isinstance(e, EmptyTocError):
+        typer.echo(
+            f"Error: The PDF '{input_pdf_path}' contains no table of contents to extract.",
+            err=True,
+        )
+    else:
+        raise e
+    raise typer.Exit(1)
 
 
 def version_callback(value: bool) -> None:
@@ -112,37 +147,24 @@ def dump(
         ),
     ] = False,
     password: Annotated[
-        Optional[str],
+        bool,
         typer.Option(
             "--password",
             "-p",
-            envvar="PDF_PASSWORD",
-            show_default=False,
-            help="User password to open protected PDF.",
+            help="Prompt for password to open protected PDF (or set PDF_PASSWORD env var).",
         ),
-    ] = None,
+    ] = False,
 ) -> None:
     """Extract the existing table of contents from a PDF to a text file."""
     if output_toc_path:
         validate_output_directory(output_toc_path)
 
+    pdf_password = get_pdf_password(password)
+
     try:
-        dump_text_toc(input_pdf_path, output_toc_path, align_left, password)
-    except PasswordRequiredError:
-        typer.echo(
-            f"Error: PDF '{input_pdf_path}' requires a password. Use --password option.",
-            err=True,
-        )
-        raise typer.Exit(1)
-    except PdfProtectionError as e:
-        typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(1)
-    except EmptyTocError:
-        typer.echo(
-            f"Error: The PDF '{input_pdf_path}' contains no table of contents to extract.",
-            err=True,
-        )
-        raise typer.Exit(1)
+        dump_text_toc(input_pdf_path, output_toc_path, align_left, pdf_password)
+    except (PasswordRequiredError, PdfProtectionError, EmptyTocError) as e:
+        handle_pdf_error(e, input_pdf_path)
 
 
 @app.command()
@@ -176,33 +198,30 @@ def replace(
         ),
     ] = None,
     password: Annotated[
-        Optional[str],
+        bool,
         typer.Option(
             "--password",
             "-p",
-            envvar="PDF_PASSWORD",
-            show_default=False,
-            help="User password to open protected PDF.",
+            help="Prompt for password to open protected PDF (or set PDF_PASSWORD env var).",
         ),
-    ] = None,
+    ] = False,
 ) -> None:
     """Replace the PDF's table of contents with entries from a text file."""
     if output:
         validate_output_directory(output)
 
+    pdf_password = get_pdf_password(password)
+
     try:
         update_toc(
-            input_pdf_path, toc_file_path, output, replace_toc=True, password=password
+            input_pdf_path,
+            toc_file_path,
+            output,
+            replace_toc=True,
+            password=pdf_password,
         )
-    except PasswordRequiredError:
-        typer.echo(
-            f"Error: PDF '{input_pdf_path}' requires a password. Use --password option.",
-            err=True,
-        )
-        raise typer.Exit(1)
-    except PdfProtectionError as e:
-        typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(1)
+    except (PasswordRequiredError, PdfProtectionError) as e:
+        handle_pdf_error(e, input_pdf_path)
 
 
 @app.command()
@@ -236,30 +255,27 @@ def append(
         ),
     ] = None,
     password: Annotated[
-        Optional[str],
+        bool,
         typer.Option(
             "--password",
             "-p",
-            envvar="PDF_PASSWORD",
-            show_default=False,
-            help="User password to open protected PDF.",
+            help="Prompt for password to open protected PDF (or set PDF_PASSWORD env var).",
         ),
-    ] = None,
+    ] = False,
 ) -> None:
     """Add new table of contents entries to the existing PDF bookmarks."""
     if output:
         validate_output_directory(output)
 
+    pdf_password = get_pdf_password(password)
+
     try:
         update_toc(
-            input_pdf_path, toc_file_path, output, replace_toc=False, password=password
+            input_pdf_path,
+            toc_file_path,
+            output,
+            replace_toc=False,
+            password=pdf_password,
         )
-    except PasswordRequiredError:
-        typer.echo(
-            f"Error: PDF '{input_pdf_path}' requires a password. Use --password option.",
-            err=True,
-        )
-        raise typer.Exit(1)
-    except PdfProtectionError as e:
-        typer.echo(f"Error: {e}", err=True)
-        raise typer.Exit(1)
+    except (PasswordRequiredError, PdfProtectionError) as e:
+        handle_pdf_error(e, input_pdf_path)
