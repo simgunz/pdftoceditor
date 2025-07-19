@@ -38,19 +38,22 @@ def dump_metadata(input_pdf_path: Path, metadata_file_path: Path) -> None:
 
 def toc_from_metadata(metadata_file_path: Path) -> List[Tuple[str, str, str]]:
     """Reads the ToC from the PDF metadata and returns a list of tuple (description, level, page)"""
-    toc = list()
     with metadata_file_path.open() as f:
         lines = f.readlines()
-        indices = [i for i, s in enumerate(lines) if "BookmarkBegin" in s]
-        for i in indices:
-            rawdescription, rawlevel, rawpage = tuple(lines[i + 1 : i + 4])
-            description = strip_meta_desc(rawdescription)
-            level = strip_meta_desc(rawlevel)
-            page = strip_meta_desc(rawpage)
-            toc.append((description, level, page))
-        # Sort by page number
-        toc = sorted(toc, key=lambda t: int(t[2]))
-    return toc
+
+        # Each bookmark has: BookmarkTitle, BookmarkLevel, BookmarkPageNumber on lines i+1, i+2, i+3
+        toc = (
+            (
+                strip_meta_desc(lines[i + 1]),
+                strip_meta_desc(lines[i + 2]),
+                strip_meta_desc(lines[i + 3]),
+            )
+            for i, line in enumerate(lines)
+            if "BookmarkBegin" in line
+        )
+
+        # Sort by page number (third element)
+        return sorted(toc, key=lambda entry: int(entry[2]))
 
 
 # Public API Functions
