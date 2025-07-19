@@ -10,18 +10,18 @@ def test_data_path():
 
 
 @pytest.fixture
-def test_pdf_path(test_data_path):
-    """Return the path to the test PDF file"""
-    return test_data_path / "test_with_toc.pdf"
-
-
-@pytest.fixture
-def test_multi_page_pdf_path(test_data_path):
-    """Return the path to the multi-page test PDF file"""
-    return test_data_path / "test_multi_page_toc.pdf"
-
-
-@pytest.fixture
-def simple_no_toc_pdf_path(test_data_path):
+def basic_no_toc_pdf_path(test_data_path):
     """Return the path to the simple PDF with no TOC"""
-    return test_data_path / "simple_no_toc.pdf"
+    return test_data_path / "basic_no_toc.pdf"
+
+
+@pytest.fixture
+def basic_with_toc_pdf_path(test_data_path):
+    """Return the path to the test PDF file"""
+    return test_data_path / "basic_with_toc.pdf"
+
+
+@pytest.fixture
+def double_digit_pages_with_toc_pdf_path(test_data_path):
+    """Return the path to the multi-page test PDF file"""
+    return test_data_path / "double_digit_pages_with_toc.pdf"

@@ -6,10 +6,10 @@ import pytest
 from pdftoceditor.pdftoceditor import dump_text_toc, update_toc
 
 
-def test_append_toc_to_empty_pdf_same_as_replace(simple_no_toc_pdf_path, tmp_path):
+def test_append_toc_to_empty_pdf_same_as_replace(basic_no_toc_pdf_path, tmp_path):
     """Test appending ToC to PDF with no existing bookmarks - should behave same as replace"""
     test_pdf = tmp_path / "test_input.pdf"
-    test_pdf.write_bytes(simple_no_toc_pdf_path.read_bytes())
+    test_pdf.write_bytes(basic_no_toc_pdf_path.read_bytes())
 
     # Create a simple ToC file
     toc_content = """  1 Introduction
@@ -39,10 +39,10 @@ def test_append_toc_to_empty_pdf_same_as_replace(simple_no_toc_pdf_path, tmp_pat
     assert "Conclusion" in result_content
 
 
-def test_append_toc_to_pdf_with_existing_toc(simple_no_toc_pdf_path, tmp_path):
+def test_append_toc_to_pdf_with_existing_toc(basic_no_toc_pdf_path, tmp_path):
     """Test appending ToC to PDF that already has bookmarks"""
     test_pdf = tmp_path / "test_input.pdf"
-    test_pdf.write_bytes(simple_no_toc_pdf_path.read_bytes())
+    test_pdf.write_bytes(basic_no_toc_pdf_path.read_bytes())
 
     # Add initial ToC
     initial_toc_content = """  1 Chapter 1
@@ -78,10 +78,10 @@ def test_append_toc_to_pdf_with_existing_toc(simple_no_toc_pdf_path, tmp_path):
     assert "Appendix" in result_content
 
 
-def test_append_toc_default_output_path(simple_no_toc_pdf_path, tmp_path):
+def test_append_toc_default_output_path(basic_no_toc_pdf_path, tmp_path):
     """Test append ToC with default output path generation"""
     test_pdf = tmp_path / "test.pdf"
-    test_pdf.write_bytes(simple_no_toc_pdf_path.read_bytes())
+    test_pdf.write_bytes(basic_no_toc_pdf_path.read_bytes())
 
     toc_content = """  1 Test Chapter"""
     toc_file = tmp_path / "toc.txt"
@@ -94,10 +94,10 @@ def test_append_toc_default_output_path(simple_no_toc_pdf_path, tmp_path):
     assert expected_output.exists()
 
 
-def test_replace_empty_toc_adds_toc(simple_no_toc_pdf_path, tmp_path):
+def test_replace_empty_toc_adds_toc(basic_no_toc_pdf_path, tmp_path):
     """Test replacing ToC in PDF with no existing bookmarks - should add the ToC"""
     test_pdf = tmp_path / "test_input.pdf"
-    test_pdf.write_bytes(simple_no_toc_pdf_path.read_bytes())
+    test_pdf.write_bytes(basic_no_toc_pdf_path.read_bytes())
 
     toc_content = """  1 New Chapter
   2   New Section
@@ -125,10 +125,10 @@ def test_replace_empty_toc_adds_toc(simple_no_toc_pdf_path, tmp_path):
     assert "Another Chapter" in result_content
 
 
-def test_replace_existing_toc(simple_no_toc_pdf_path, tmp_path):
+def test_replace_existing_toc(basic_no_toc_pdf_path, tmp_path):
     """Test replacing existing ToC completely"""
     test_pdf = tmp_path / "test_input.pdf"
-    test_pdf.write_bytes(simple_no_toc_pdf_path.read_bytes())
+    test_pdf.write_bytes(basic_no_toc_pdf_path.read_bytes())
 
     # Add initial ToC
     initial_toc_content = """  1 Old Chapter 1
@@ -166,10 +166,10 @@ def test_replace_existing_toc(simple_no_toc_pdf_path, tmp_path):
     assert "Old Chapter" not in result_content
 
 
-def test_replace_with_complex_hierarchy(simple_no_toc_pdf_path, tmp_path):
+def test_replace_with_complex_hierarchy(basic_no_toc_pdf_path, tmp_path):
     """Test replacing ToC with complex multi-level hierarchy"""
     test_pdf = tmp_path / "test_input.pdf"
-    test_pdf.write_bytes(simple_no_toc_pdf_path.read_bytes())
+    test_pdf.write_bytes(basic_no_toc_pdf_path.read_bytes())
 
     complex_toc_content = """  1 Chapter 1
   2   Section 1.1
@@ -207,11 +207,11 @@ def test_replace_with_complex_hierarchy(simple_no_toc_pdf_path, tmp_path):
 
 
 def test_update_toc_with_invalid_toc_format_should_fail(
-    simple_no_toc_pdf_path, tmp_path
+    basic_no_toc_pdf_path, tmp_path
 ):
     """Test that update_toc fails gracefully with invalid ToC format"""
     test_pdf = tmp_path / "test_input.pdf"
-    test_pdf.write_bytes(simple_no_toc_pdf_path.read_bytes())
+    test_pdf.write_bytes(basic_no_toc_pdf_path.read_bytes())
 
     # Create an invalid ToC file (missing page numbers)
     invalid_toc_content = """Introduction
@@ -227,10 +227,10 @@ Conclusion"""
         update_toc(test_pdf, toc_file, output_pdf, replace_toc=True)
 
 
-def test_update_toc_with_empty_toc_file_should_fail(simple_no_toc_pdf_path, tmp_path):
+def test_update_toc_with_empty_toc_file_should_fail(basic_no_toc_pdf_path, tmp_path):
     """Test that update_toc fails gracefully with empty ToC file"""
     test_pdf = tmp_path / "test_input.pdf"
-    test_pdf.write_bytes(simple_no_toc_pdf_path.read_bytes())
+    test_pdf.write_bytes(basic_no_toc_pdf_path.read_bytes())
 
     # Create an empty ToC file
     toc_file = tmp_path / "empty_toc.txt"
