@@ -14,13 +14,12 @@ max_line_length: 88
 package_name: pdftoceditor
 package_type: cli
 project_name: ''
-project_short_description: "Python tool for editing PDF table of contents using simple\
-    \ text\n  files with replace, append, and dump operations."
+project_short_description: Python tool for editing PDF table of contents using simple
+    text files with replace, append, and dump operations.
 python_version: '3.12'
 testing_framework: pytest
 type_checker: none
-type_checker_strictness: strict
 use_jupyter_notebooks: false
 use_lint_strict_rules: true
 uv_version: 0.7.13
-version: 0.0.0
+version: 1.0.0

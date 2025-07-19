@@ -1,6 +1,6 @@
 [project]
 name = "pdftoceditor"
-version = "0.0.0"
+version = "1.0.0"
 description = "Python tool for editing PDF table of contents using simple text files with replace, append, and dump operations."
 authors = [{ name="Simone Gaiarin", email="simgunz@gmail.com"}]
 license = { file = "LICENSE" }

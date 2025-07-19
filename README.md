@@ -1,5 +1,4 @@
-PDF ToC editor update the table of content of a PDF using the one specified in a simple text file.
-
+Python tool for editing PDF table of contents using simple text files with replace, append, and dump operations.
 
 Requirements
 ------------
