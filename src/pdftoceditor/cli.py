@@ -13,24 +13,6 @@ from pdftoceditor.pdftoceditor import dump_text_toc, update_toc
 app = typer.Typer(
     no_args_is_help=True,
     rich_markup_mode="markdown",
-    help="""Edit a PDF table of contents using simple text files.
-
-    **TOC file format**\n
-    \n
-    Page numbers are right-aligned with one space separating them from entries.\n
-    Two spaces per indentation level for sub-entries.\n
-    \n
-    **Example**\n
-    ```
-    1   Chapter 1. This line is not rendered by typer for some reason.\n
-    1   Section 1\n
-    2     Subsection 1.1\n
-    3     Subsection 1.2\n
-    4       Subsubsection 1.1.1\n
-    10  Section 2\n
-    100 Section 3\n
-    ```
-    """,
 )
 
 
@@ -54,6 +36,24 @@ def main(
         ),
     ] = None,
 ) -> None:
+    """Edit a PDF table of contents using simple text files.
+
+    **TOC file format**\n
+    \n
+    Page numbers are right-aligned with one space separating them from entries.\n
+    Two spaces per indentation level for sub-entries.\n
+    \n
+    **Example**\n
+    ```
+    1   Chapter 1. This line is not rendered by typer for some reason.\n
+    1   Section 1\n
+    2     Subsection 1.1\n
+    3     Subsection 1.2\n
+    4       Subsubsection 1.1.1\n
+    10  Section 2\n
+    100 Section 3\n
+    ```
+    """
     pass
 
 
