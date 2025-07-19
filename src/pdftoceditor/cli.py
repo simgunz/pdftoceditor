@@ -62,7 +62,12 @@ def dump(
     input_pdf_path: Annotated[Path, typer.Argument(help="Input PDF file")],
     output_toc_path: Annotated[
         Optional[Path],
-        typer.Option("--output-toc", "-t", help="Output table of content text file"),
+        typer.Option(
+            "--output-toc",
+            "-t",
+            help="Output table of content text file",
+            show_default="input filename with .txt extension, next to original PDF",
+        ),
     ] = None,
     align_left: Annotated[
         bool,
@@ -84,7 +89,10 @@ def replace(
     output: Annotated[
         Optional[Path],
         typer.Option(
-            "--output", "-o", help="Output PDF file with updated table of content"
+            "--output",
+            "-o",
+            help="Output PDF file with updated table of content",
+            show_default="input filename with '_updated_toc' suffix, next to original PDF",
         ),
     ] = None,
 ) -> None:
@@ -99,7 +107,10 @@ def append(
     output: Annotated[
         Optional[Path],
         typer.Option(
-            "--output", "-o", help="Output PDF file with updated table of content"
+            "--output",
+            "-o",
+            help="Output PDF file with updated table of content",
+            show_default="input filename with '_updated_toc' suffix, next to original PDF",
         ),
     ] = None,
 ) -> None:
