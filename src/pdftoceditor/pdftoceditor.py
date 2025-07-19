@@ -1,4 +1,3 @@
-import os
 import re
 import shutil
 import subprocess
@@ -12,9 +11,6 @@ BookmarkTitle: {description}
 BookmarkLevel: {level}
 BookmarkPageNumber: {page}\
 """
-CMD_UPDATE_METADATA = (
-    "pdftk '{inputpdf}' update_info {metadatafile} output '{outputpdf}'"
-)
 
 
 def validate_pdftk_installed() -> None:
@@ -143,9 +139,14 @@ def update_toc(
             output_pdf_path = input_pdf_path.with_stem(
                 f"{input_pdf_path.stem}_updated_toc"
             )
-        cmd_update_metadata = CMD_UPDATE_METADATA.format(
-            inputpdf=input_pdf_path,
-            metadatafile=metadata_file_path,
-            outputpdf=output_pdf_path,
+        subprocess.run(
+            [
+                "pdftk",
+                str(input_pdf_path),
+                "update_info",
+                str(metadata_file_path),
+                "output",
+                str(output_pdf_path),
+            ],
+            check=True,
         )
-        os.system(cmd_update_metadata)
