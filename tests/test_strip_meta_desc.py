@@ -67,23 +67,23 @@ def test_strip_meta_desc_with_leading_trailing_spaces():
 
 
 def test_strip_meta_desc_no_colon_raises_error():
-    """Test that malformed entry (no colon) raises AttributeError"""
+    """Test that malformed entry (no colon) raises ValueError"""
     metadata_entry = "BookmarkTitle Introduction"
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError, match="Invalid metadata format"):
         strip_meta_desc(metadata_entry)
 
 
 def test_strip_meta_desc_empty_string_raises_error():
-    """Test that empty string raises AttributeError"""
+    """Test that empty string raises ValueError"""
     metadata_entry = ""
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError, match="Invalid metadata format"):
         strip_meta_desc(metadata_entry)
 
 
 def test_strip_meta_desc_only_colon_raises_error():
-    """Test that string with only colon raises AttributeError"""
+    """Test that string with only colon raises ValueError"""
     metadata_entry = ":"
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError, match="Invalid metadata format"):
         strip_meta_desc(metadata_entry)
 
 

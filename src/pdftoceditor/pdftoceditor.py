@@ -12,9 +12,16 @@ class TocEntry(NamedTuple):
     description: str
 
 
+# Regex patterns
 RE_TOC_LINE = re.compile(
     r"(?P<padding>\s*)(?P<page>\d+)(?P<spaces> *)(?P<description>.*)"
 )
+RE_METADATA_ENTRY = re.compile(r"[^:]*: (?P<value>[^\n]*)")
+
+# Metadata bookmark structure offsets from BookmarkBegin line
+BOOKMARK_TITLE_OFFSET = 1
+BOOKMARK_LEVEL_OFFSET = 2
+BOOKMARK_PAGE_OFFSET = 3
 
 BM_TEMPLATE = """\
 BookmarkBegin
@@ -29,7 +36,15 @@ BookmarkPageNumber: {page}\
 
 
 def strip_meta_desc(metadata_entry: str) -> str:
-    return re.search("[^:]*: ([^\n]*)", metadata_entry).group(1)
+    """Extract value after colon from metadata entry.
+
+    Raises:
+        ValueError: If the metadata entry format is invalid
+    """
+    match = RE_METADATA_ENTRY.match(metadata_entry)
+    if not match:
+        raise ValueError(f"Invalid metadata format: '{metadata_entry}'")
+    return match.group("value")
 
 
 def calculate_toc_level(indentation_spaces: str) -> str:
@@ -59,16 +74,13 @@ def validate_toc_format(text_toc_lines: list[str]) -> None:
     if not non_empty_lines:
         raise ValueError("ToC file cannot be empty")
 
-    # All lines must be valid ToC lines
+    # Validate all lines and extract page sections
     page_sections = []
     for line_num, line in enumerate(non_empty_lines, 1):
         match = RE_TOC_LINE.match(line)
         if not match:
             raise ValueError(f"Line {line_num} has invalid format: '{line}'")
-
-        padding = match.group("padding")
-        number = match.group("page")
-        page_sections.append(padding + number)
+        page_sections.append(match.group("padding") + match.group("page"))
 
     # All page sections must have the same length for alignment
     first_length = len(page_sections[0])
@@ -86,22 +98,21 @@ def dump_metadata(input_pdf_path: Path, metadata_file_path: Path) -> None:
 
 def load_metadata_toc(metadata_file_path: Path) -> List[TocEntry]:
     """Reads the ToC from the PDF metadata and returns a list of TocEntry objects"""
-    with metadata_file_path.open() as f:
-        lines = f.readlines()
+    lines = metadata_file_path.read_text().splitlines()
 
-        # Each bookmark has: BookmarkTitle, BookmarkLevel, BookmarkPageNumber on lines i+1, i+2, i+3
-        toc = (
-            TocEntry(
-                page=strip_meta_desc(lines[i + 3]),
-                level=strip_meta_desc(lines[i + 2]),
-                description=strip_meta_desc(lines[i + 1]),
-            )
-            for i, line in enumerate(lines)
-            if "BookmarkBegin" in line
+    # Each bookmark has: BookmarkTitle, BookmarkLevel, BookmarkPageNumber after BookmarkBegin
+    toc = (
+        TocEntry(
+            page=strip_meta_desc(lines[i + BOOKMARK_PAGE_OFFSET]),
+            level=strip_meta_desc(lines[i + BOOKMARK_LEVEL_OFFSET]),
+            description=strip_meta_desc(lines[i + BOOKMARK_TITLE_OFFSET]),
         )
+        for i, line in enumerate(lines)
+        if "BookmarkBegin" in line
+    )
 
-        # Sort by page number
-        return sorted(toc, key=lambda entry: int(entry.page))
+    # Sort by page number
+    return sorted(toc, key=lambda entry: int(entry.page))
 
 
 def load_text_toc(toc_file_path: Path) -> List[TocEntry]:
