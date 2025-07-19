@@ -89,8 +89,3 @@ def dump(
 ) -> None:
     """Dump the table of content of input PDF to a text file."""
     dump_text_toc(input_pdf_path, output_toc_path, align_left)
-
-
-def main() -> None:
-    """Main entry point for the CLI."""
-    app()
