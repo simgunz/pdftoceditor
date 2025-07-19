@@ -84,7 +84,6 @@ def validate_toc_format(text_toc_lines: list[str]) -> None:
         ValueError: If page numbers are not properly aligned
     """
     non_empty_lines = [line for line in text_toc_lines if line.strip()]
-
     # ToC file cannot be empty
     if not non_empty_lines:
         raise ValueError("ToC file cannot be empty")
@@ -114,7 +113,6 @@ def dump_metadata(input_pdf_path: Path, metadata_file_path: Path) -> None:
 def load_metadata_toc(metadata_file_path: Path) -> List[TocEntry]:
     """Reads the ToC from the PDF metadata and returns a list of TocEntry objects"""
     lines = metadata_file_path.read_text().splitlines()
-
     # Each bookmark has: BookmarkTitle, BookmarkLevel, BookmarkPageNumber after BookmarkBegin
     toc = (
         TocEntry(
@@ -125,7 +123,6 @@ def load_metadata_toc(metadata_file_path: Path) -> List[TocEntry]:
         for i, line in enumerate(lines)
         if "BookmarkBegin" in line
     )
-
     # Sort by page number
     return sorted(toc, key=lambda entry: int(entry.page))
 
@@ -142,11 +139,9 @@ def format_toc_entry(
     """Format a single ToC entry as text."""
     # Calculate padding for page number alignment
     page_padding = " " * (max_page_width - len(entry.page))
-
     # Calculate indentation based on level
     level_number = int(float(entry.level)) - 1
     level_indent = " " * LEVEL_INDENT_SPACES * level_number
-
     # Select template and format entry
     template = (
         TOC_TEMPLATE_LEFT_ALIGN
