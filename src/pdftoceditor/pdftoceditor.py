@@ -7,6 +7,12 @@ from pathlib import Path
 from typing import List, NamedTuple, Optional
 
 
+class EmptyTocError(Exception):
+    """Raised when attempting to process a PDF with no table of contents."""
+
+    pass
+
+
 class PageAlignment(Enum):
     LEFT = "left"
     RIGHT = "right"
@@ -199,6 +205,10 @@ def dump_text_toc(
         metadata_file_path = Path(temp_file.name)
         dump_metadata(input_pdf_path, metadata_file_path)
         toc = load_metadata_toc(metadata_file_path)
+
+    # Check if ToC is empty
+    if not toc:
+        raise EmptyTocError("PDF contains no table of contents")
 
     # Determine output path
     if not output_toc_path:

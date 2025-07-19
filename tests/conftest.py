@@ -19,3 +19,9 @@ def test_pdf_path(test_data_path):
 def test_multi_page_pdf_path(test_data_path):
     """Return the path to the multi-page test PDF file"""
     return test_data_path / "test_multi_page_toc.pdf"
+
+
+@pytest.fixture
+def simple_no_toc_pdf_path(test_data_path):
+    """Return the path to the simple PDF with no TOC"""
+    return test_data_path / "simple_no_toc.pdf"

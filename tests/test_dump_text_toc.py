@@ -1,6 +1,8 @@
 from pathlib import Path
 
-from pdftoceditor.pdftoceditor import dump_text_toc
+import pytest
+
+from pdftoceditor.pdftoceditor import EmptyTocError, dump_text_toc
 
 
 def test_dump_text_toc_default_output(test_pdf_path, tmp_path):
@@ -122,3 +124,42 @@ def test_dump_text_toc_align_right(test_multi_page_pdf_path, tmp_path):
 11 References
 12 Appendix"""
     assert expected_content in content
+
+
+def test_dump_text_toc_empty_pdf_should_raise_empty_toc_error(
+    simple_no_toc_pdf_path, tmp_path
+):
+    """Test dumping ToC from PDF with no bookmarks should raise EmptyTocError"""
+    output_path = tmp_path / "empty_toc.txt"
+
+    # This should raise EmptyTocError when trying to process empty ToC
+    with pytest.raises(EmptyTocError):
+        dump_text_toc(simple_no_toc_pdf_path, output_path)
+
+
+def test_dump_text_toc_empty_pdf_default_output_should_raise_empty_toc_error(
+    simple_no_toc_pdf_path, tmp_path
+):
+    """Test dumping empty ToC with default output path should raise EmptyTocError"""
+    # Copy PDF to tmp_path so default output doesn't interfere
+    test_pdf = tmp_path / "test.pdf"
+    test_pdf.write_bytes(simple_no_toc_pdf_path.read_bytes())
+
+    # This should raise EmptyTocError
+    with pytest.raises(EmptyTocError):
+        dump_text_toc(test_pdf)
+
+
+def test_dump_text_toc_empty_pdf_with_alignment_should_raise_empty_toc_error(
+    simple_no_toc_pdf_path, tmp_path
+):
+    """Test dumping empty ToC with alignment options should raise EmptyTocError"""
+    output_left = tmp_path / "empty_left.txt"
+    output_right = tmp_path / "empty_right.txt"
+
+    # Both alignment options should raise EmptyTocError with empty TOC
+    with pytest.raises(EmptyTocError):
+        dump_text_toc(simple_no_toc_pdf_path, output_left, align_page_left=True)
+
+    with pytest.raises(EmptyTocError):
+        dump_text_toc(simple_no_toc_pdf_path, output_right, align_page_left=False)
