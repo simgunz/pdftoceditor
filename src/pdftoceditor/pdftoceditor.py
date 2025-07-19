@@ -1,7 +1,7 @@
 import os
 import re
+import tempfile
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import List, Optional, Tuple
 
 BM_TEMPLATE = """\
@@ -51,8 +51,10 @@ def dump_text_toc(
     align_page_left: bool = False,
 ) -> None:
     """Dump the table of content of the given PDF to a text file"""
-    with TemporaryDirectory() as temp_dir:
-        metadata_file_path = Path(temp_dir) / "metadata.txt"
+    with tempfile.NamedTemporaryFile(
+        mode="w+", suffix=".txt", delete_on_close=False
+    ) as temp_file:
+        metadata_file_path = Path(temp_file.name)
         dump_metadata(input_pdf_path, metadata_file_path)
         toc = toc_from_metadata(metadata_file_path)
     max_page_number_len = len(max(toc, key=lambda t: len(t[2]))[2])
@@ -106,8 +108,10 @@ def update_toc(
 ) -> None:
     """Update the table of contents of the PDF with new entries"""
     toc = load_toc(toc_file_path)
-    with TemporaryDirectory() as temp_dir:
-        metadata_file_path = Path(temp_dir) / "metadata.txt"
+    with tempfile.NamedTemporaryFile(
+        mode="w+", suffix=".txt", delete_on_close=False
+    ) as temp_file:
+        metadata_file_path = Path(temp_file.name)
         dump_metadata(input_pdf_path, metadata_file_path)
         with metadata_file_path.open() as metadata_file:
             # Acquire the metadata lines not related to the ToC
