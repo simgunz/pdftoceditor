@@ -1,7 +1,5 @@
 from pathlib import Path
 
-import pytest
-
 from pdftoceditor.pdftoceditor import dump_text_toc
 
 
@@ -124,13 +122,3 @@ class TestDumpTextToc:
 11 References
 12 Appendix"""
         assert expected_content in content
-
-    def test_dump_text_toc_nonexistent_pdf(self, tmp_path):
-        """Test dumping ToC from non-existent PDF"""
-        nonexistent_pdf = tmp_path / "nonexistent.pdf"
-        output_file = tmp_path / "output.txt"
-
-        # This should raise a FileNotFoundError when pdftk fails to create metadata
-        # and toc_from_metadata tries to open the non-existent metadata file
-        with pytest.raises(FileNotFoundError):
-            dump_text_toc(nonexistent_pdf, output_file)

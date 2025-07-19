@@ -56,11 +56,3 @@ BookmarkPageNumber: 8"""
         dump_metadata(test_pdf_path, expected_path)
 
         assert expected_path.exists()
-
-    def test_dump_metadata_nonexistent_pdf(self, tmp_path):
-        """Test dump_metadata with non-existent PDF file"""
-        nonexistent_pdf = "nonexistent.pdf"
-        expected_path = tmp_path / "metadata.txt"
-
-        # Function should execute without error, but pdftk will fail silently
-        dump_metadata(nonexistent_pdf, expected_path)

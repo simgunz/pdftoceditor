@@ -27,6 +27,25 @@ def version_callback(value: bool) -> None:
         raise typer.Exit()
 
 
+def validate_pdf_file(path: Path) -> Path:
+    """Validate that a file has .pdf extension."""
+    if path.suffix.lower() != ".pdf":
+        raise typer.BadParameter(f"File must have .pdf extension, got: {path.suffix}")
+    return path
+
+
+def validate_output_directory(output_path: Path) -> None:
+    """Validate that the output directory exists."""
+    if output_path.parent != Path(".") and not output_path.parent.exists():
+        raise typer.BadParameter(
+            f"Output directory does not exist: {output_path.parent}"
+        )
+    if output_path.parent.exists() and not output_path.parent.is_dir():
+        raise typer.BadParameter(
+            f"Output path parent is not a directory: {output_path.parent}"
+        )
+
+
 @app.callback()
 def main(
     version: Annotated[
@@ -67,7 +86,16 @@ def main(
 
 @app.command()
 def dump(
-    input_pdf_path: Annotated[Path, typer.Argument(help="Input PDF file")],
+    input_pdf_path: Annotated[
+        Path,
+        typer.Argument(
+            file_okay=True,
+            dir_okay=False,
+            exists=True,
+            callback=validate_pdf_file,
+            help="Input PDF file",
+        ),
+    ],
     output_toc_path: Annotated[
         Optional[Path],
         typer.Option(
@@ -87,13 +115,32 @@ def dump(
     ] = False,
 ) -> None:
     """Extract the existing table of contents from a PDF to a text file."""
+    if output_toc_path:
+        validate_output_directory(output_toc_path)
     dump_text_toc(input_pdf_path, output_toc_path, align_left)
 
 
 @app.command()
 def replace(
-    input_pdf_path: Annotated[Path, typer.Argument(help="Input PDF file")],
-    toc_file_path: Annotated[Path, typer.Argument(help="Table of content text file")],
+    input_pdf_path: Annotated[
+        Path,
+        typer.Argument(
+            file_okay=True,
+            dir_okay=False,
+            exists=True,
+            callback=validate_pdf_file,
+            help="Input PDF file",
+        ),
+    ],
+    toc_file_path: Annotated[
+        Path,
+        typer.Argument(
+            file_okay=True,
+            dir_okay=False,
+            exists=True,
+            help="Table of content text file",
+        ),
+    ],
     output: Annotated[
         Optional[Path],
         typer.Option(
@@ -105,13 +152,32 @@ def replace(
     ] = None,
 ) -> None:
     """Replace the PDF's table of contents with entries from a text file."""
+    if output:
+        validate_output_directory(output)
     update_toc(input_pdf_path, toc_file_path, output, replace_toc=True)
 
 
 @app.command()
 def append(
-    input_pdf_path: Annotated[Path, typer.Argument(help="Input PDF file")],
-    toc_file_path: Annotated[Path, typer.Argument(help="Table of content text file")],
+    input_pdf_path: Annotated[
+        Path,
+        typer.Argument(
+            file_okay=True,
+            dir_okay=False,
+            exists=True,
+            callback=validate_pdf_file,
+            help="Input PDF file",
+        ),
+    ],
+    toc_file_path: Annotated[
+        Path,
+        typer.Argument(
+            file_okay=True,
+            dir_okay=False,
+            exists=True,
+            help="Table of content text file",
+        ),
+    ],
     output: Annotated[
         Optional[Path],
         typer.Option(
@@ -123,4 +189,6 @@ def append(
     ] = None,
 ) -> None:
     """Add new table of contents entries to the existing PDF bookmarks."""
+    if output:
+        validate_output_directory(output)
     update_toc(input_pdf_path, toc_file_path, output, replace_toc=False)
