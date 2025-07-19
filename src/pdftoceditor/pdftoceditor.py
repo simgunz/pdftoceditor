@@ -23,6 +23,11 @@ BOOKMARK_TITLE_OFFSET = 1
 BOOKMARK_LEVEL_OFFSET = 2
 BOOKMARK_PAGE_OFFSET = 3
 
+# ToC formatting constants
+LEVEL_INDENT_SPACES = 2  # Two spaces per indentation level
+TOC_TEMPLATE_LEFT_ALIGN = "{page}{padding} {indent}{description}"
+TOC_TEMPLATE_RIGHT_ALIGN = "{padding}{page} {indent}{description}"
+
 BM_TEMPLATE = """\
 BookmarkBegin
 BookmarkTitle: {description}
@@ -115,6 +120,33 @@ def load_metadata_toc(metadata_file_path: Path) -> List[TocEntry]:
     return sorted(toc, key=lambda entry: int(entry.page))
 
 
+def calculate_max_page_width(toc: List[TocEntry]) -> int:
+    """Calculate the maximum width needed for page numbers."""
+    longest_page_entry = max(toc, key=lambda entry: len(entry.page))
+    return len(longest_page_entry.page)
+
+
+def format_toc_entry(
+    entry: TocEntry, max_page_width: int, align_page_left: bool
+) -> str:
+    """Format a single ToC entry as text."""
+    # Calculate padding for page number alignment
+    page_padding = " " * (max_page_width - len(entry.page))
+
+    # Calculate indentation based on level
+    level_number = int(float(entry.level)) - 1
+    level_indent = " " * LEVEL_INDENT_SPACES * level_number
+
+    # Select template and format entry
+    template = TOC_TEMPLATE_LEFT_ALIGN if align_page_left else TOC_TEMPLATE_RIGHT_ALIGN
+    return template.format(
+        page=entry.page,
+        padding=page_padding,
+        indent=level_indent,
+        description=entry.description,
+    )
+
+
 def load_text_toc(toc_file_path: Path) -> List[TocEntry]:
     """Reads the ToC from the text file and returns a list of TocEntry objects"""
     lines = toc_file_path.read_text().splitlines()
@@ -151,30 +183,24 @@ def dump_text_toc(
     align_page_left: bool = False,
 ) -> None:
     """Dump the table of content of the given PDF to a text file"""
+    # Extract ToC from PDF metadata
     with tempfile.NamedTemporaryFile(
         mode="w+", suffix=".txt", delete_on_close=False
     ) as temp_file:
         metadata_file_path = Path(temp_file.name)
         dump_metadata(input_pdf_path, metadata_file_path)
         toc = load_metadata_toc(metadata_file_path)
-    max_page_number_len = len(max(toc, key=lambda entry: len(entry.page)).page)
+
+    # Determine output path
     if not output_toc_path:
         output_toc_path = input_pdf_path.with_suffix(".txt")
-    if align_page_left:
-        text_toc_entry_template = "{page}{pagepadspace} {descspace}{description}"
-    else:
-        text_toc_entry_template = "{pagepadspace}{page} {descspace}{description}"
+
+    # Format and write ToC entries
+    max_page_width = calculate_max_page_width(toc)
     with output_toc_path.open("w") as outfile:
-        for page, level, description in toc:
-            pagepadspace = " " * (max_page_number_len - len(page))
-            descspace = "  " * (int(level) - 1)
-            text_toc_entry = text_toc_entry_template.format(
-                page=page,
-                pagepadspace=pagepadspace,
-                descspace=descspace,
-                description=description,
-            )
-            print(text_toc_entry, file=outfile)
+        for entry in toc:
+            formatted_entry = format_toc_entry(entry, max_page_width, align_page_left)
+            print(formatted_entry, file=outfile)
 
 
 def update_toc(
