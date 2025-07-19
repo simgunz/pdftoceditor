@@ -12,6 +12,8 @@ class TocEntry(NamedTuple):
     page: str
 
 
+RE_TOC_LINE = re.compile(r"(\s*\d+) ( *)(.*)")
+
 BM_TEMPLATE = """\
 BookmarkBegin
 BookmarkTitle: {description}
@@ -65,15 +67,16 @@ def load_metadata_toc(metadata_file_path: Path) -> List[TocEntry]:
 
 def load_text_toc(toc_file_path: Path) -> List[TocEntry]:
     """Reads the ToC from the text file and returns a list of TocEntry objects"""
-    toc = list()
     with toc_file_path.open() as f:
-        for line in f:
-            m = re.search(r"(\s*\d+) ( *)(.*)", line)
-            if m:
-                page = m.group(1)
-                level = str((len(m.group(2)) / 2) + 1)
-                description = m.group(3)
-                toc.append(TocEntry(description=description, level=level, page=page))
+        toc = [
+            TocEntry(
+                description=match.group(3),
+                level=str((len(match.group(2)) / 2) + 1),
+                page=match.group(1),
+            )
+            for line in f
+            if (match := RE_TOC_LINE.match(line))
+        ]
     if not verify_page_alignment(toc):
         raise Exception("Page numbers are not properly aligned.")
     return toc
