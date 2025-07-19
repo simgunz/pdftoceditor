@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import subprocess
 import tempfile
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -11,7 +12,6 @@ BookmarkTitle: {description}
 BookmarkLevel: {level}
 BookmarkPageNumber: {page}\
 """
-CMD_DUMP_METADATA = "pdftk '{inputpdf}' dump_data output {metadatafile}"
 CMD_UPDATE_METADATA = (
     "pdftk '{inputpdf}' update_info {metadatafile} output '{outputpdf}'"
 )
@@ -29,10 +29,10 @@ def validate_pdftk_installed() -> None:
 
 def dump_metadata(input_pdf_path: Path, metadata_file_path: Path) -> None:
     """Dump the metadata of the pdf to the specified file using pdftk"""
-    cmd_dump_metadata = CMD_DUMP_METADATA.format(
-        inputpdf=input_pdf_path, metadatafile=metadata_file_path
+    subprocess.run(
+        ["pdftk", str(input_pdf_path), "dump_data", "output", str(metadata_file_path)],
+        check=True,
     )
-    os.system(cmd_dump_metadata)
 
 
 def strip_meta_desc(metadata_entry: str) -> str:
