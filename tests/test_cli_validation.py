@@ -94,7 +94,7 @@ def test_cli_validates_output_directory_exists(tmp_path):
 
     with patch("shutil.which", return_value="/usr/bin/pdftk"):
         result = runner.invoke(
-            app, ["dump", str(test_pdf), "--output-toc", str(output_path)]
+            app, ["dump", str(test_pdf), "--output", str(output_path)]
         )
 
         # Should fail with directory validation error
@@ -117,7 +117,7 @@ def test_cli_accepts_existing_output_directory(tmp_path):
         with patch("subprocess.run") as mock_subprocess:
             with patch("pdftoceditor.pdftoceditor.load_metadata_toc", return_value=[]):
                 result = runner.invoke(
-                    app, ["dump", str(test_pdf), "--output-toc", str(output_path)]
+                    app, ["dump", str(test_pdf), "--output", str(output_path)]
                 )
 
                 # Should succeed with existing directory

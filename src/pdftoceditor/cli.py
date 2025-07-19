@@ -11,6 +11,7 @@ import typer
 from pdftoceditor import __version__
 from pdftoceditor.pdftoceditor import (
     EmptyTocError,
+    PageAlignment,
     PasswordRequiredError,
     PdfProtectionError,
     dump_text_toc,
@@ -119,33 +120,33 @@ def main(
 
 @app.command()
 def dump(
-    input_pdf_path: Annotated[
+    pdf_file: Annotated[
         Path,
         typer.Argument(
             file_okay=True,
             dir_okay=False,
             exists=True,
             callback=validate_pdf_file,
-            help="Input PDF file",
+            help="PDF file to extract table of contents from",
         ),
     ],
-    output_toc_path: Annotated[
+    output: Annotated[
         Optional[Path],
         typer.Option(
-            "--output-toc",
-            "-t",
-            help="Output table of content text file",
-            show_default="input filename with .txt extension, next to original PDF",
+            "--output",
+            "-o",
+            help="Output table of contents text file",
+            show_default="PDF filename with .txt extension",
         ),
     ] = None,
-    align_left: Annotated[
-        bool,
+    pages_alignment: Annotated[
+        PageAlignment,
         typer.Option(
-            "--align-left",
-            "-r",
-            help="Align the page numbers to the left on the text table of content",
+            "--pages-alignment",
+            "-a",
+            help="Alignment of page numbers in the table of contents",
         ),
-    ] = False,
+    ] = PageAlignment.RIGHT,
     password: Annotated[
         bool,
         typer.Option(
@@ -156,36 +157,39 @@ def dump(
     ] = False,
 ) -> None:
     """Extract the existing table of contents from a PDF to a text file."""
-    if output_toc_path:
-        validate_output_directory(output_toc_path)
+    if output:
+        validate_output_directory(output)
 
     pdf_password = get_pdf_password(password)
 
+    # Convert PageAlignment enum to boolean for align_page_left parameter
+    align_page_left = pages_alignment == PageAlignment.LEFT
+
     try:
-        dump_text_toc(input_pdf_path, output_toc_path, align_left, pdf_password)
+        dump_text_toc(pdf_file, output, align_page_left, pdf_password)
     except (PasswordRequiredError, PdfProtectionError, EmptyTocError) as e:
-        handle_pdf_error(e, input_pdf_path)
+        handle_pdf_error(e, pdf_file)
 
 
 @app.command()
 def replace(
-    input_pdf_path: Annotated[
+    pdf_file: Annotated[
         Path,
         typer.Argument(
             file_okay=True,
             dir_okay=False,
             exists=True,
             callback=validate_pdf_file,
-            help="Input PDF file",
+            help="PDF file to modify",
         ),
     ],
-    toc_file_path: Annotated[
+    toc_file: Annotated[
         Path,
         typer.Argument(
             file_okay=True,
             dir_okay=False,
             exists=True,
-            help="Table of content text file",
+            help="Table of contents text file",
         ),
     ],
     output: Annotated[
@@ -193,8 +197,8 @@ def replace(
         typer.Option(
             "--output",
             "-o",
-            help="Output PDF file with updated table of content",
-            show_default="input filename with '_updated_toc' suffix, next to original PDF",
+            help="Output PDF file with updated table of contents",
+            show_default="PDF filename with '_updated_toc' suffix",
         ),
     ] = None,
     password: Annotated[
@@ -213,36 +217,30 @@ def replace(
     pdf_password = get_pdf_password(password)
 
     try:
-        update_toc(
-            input_pdf_path,
-            toc_file_path,
-            output,
-            replace_toc=True,
-            password=pdf_password,
-        )
+        update_toc(pdf_file, toc_file, output, replace_toc=True, password=pdf_password)
     except (PasswordRequiredError, PdfProtectionError) as e:
-        handle_pdf_error(e, input_pdf_path)
+        handle_pdf_error(e, pdf_file)
 
 
 @app.command()
 def append(
-    input_pdf_path: Annotated[
+    pdf_file: Annotated[
         Path,
         typer.Argument(
             file_okay=True,
             dir_okay=False,
             exists=True,
             callback=validate_pdf_file,
-            help="Input PDF file",
+            help="PDF file to modify",
         ),
     ],
-    toc_file_path: Annotated[
+    toc_file: Annotated[
         Path,
         typer.Argument(
             file_okay=True,
             dir_okay=False,
             exists=True,
-            help="Table of content text file",
+            help="Table of contents text file",
         ),
     ],
     output: Annotated[
@@ -250,8 +248,8 @@ def append(
         typer.Option(
             "--output",
             "-o",
-            help="Output PDF file with updated table of content",
-            show_default="input filename with '_updated_toc' suffix, next to original PDF",
+            help="Output PDF file with updated table of contents",
+            show_default="PDF filename with '_updated_toc' suffix",
         ),
     ] = None,
     password: Annotated[
@@ -270,12 +268,6 @@ def append(
     pdf_password = get_pdf_password(password)
 
     try:
-        update_toc(
-            input_pdf_path,
-            toc_file_path,
-            output,
-            replace_toc=False,
-            password=pdf_password,
-        )
+        update_toc(pdf_file, toc_file, output, replace_toc=False, password=pdf_password)
     except (PasswordRequiredError, PdfProtectionError) as e:
-        handle_pdf_error(e, input_pdf_path)
+        handle_pdf_error(e, pdf_file)
