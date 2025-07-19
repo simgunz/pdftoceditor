@@ -9,6 +9,7 @@ import typer
 
 from pdftoceditor import __version__
 from pdftoceditor.pdftoceditor import (
+    EmptyTocError,
     dump_text_toc,
     update_toc,
     validate_pdftk_installed,
@@ -112,7 +113,15 @@ def dump(
     """Extract the existing table of contents from a PDF to a text file."""
     if output_toc_path:
         validate_output_directory(output_toc_path)
-    dump_text_toc(input_pdf_path, output_toc_path, align_left)
+
+    try:
+        dump_text_toc(input_pdf_path, output_toc_path, align_left)
+    except EmptyTocError:
+        typer.echo(
+            f"Error: The PDF '{input_pdf_path}' contains no table of contents to extract.",
+            err=True,
+        )
+        raise typer.Exit(1)
 
 
 @app.command()
