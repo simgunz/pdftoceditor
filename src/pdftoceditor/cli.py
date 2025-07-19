@@ -45,7 +45,7 @@ def main(
     \n
     **Example**\n
     ```
-    1   Chapter 1. This line is not rendered by typer for some reason.\n
+    -------------\n
     1   Section 1\n
     2     Subsection 1.1\n
     3     Subsection 1.2\n
