@@ -12,7 +12,9 @@ class TocEntry(NamedTuple):
     description: str
 
 
-RE_TOC_LINE = re.compile(r"(\s*)(\d+)( *)(.*)")
+RE_TOC_LINE = re.compile(
+    r"(?P<padding>\s*)(?P<page>\d+)(?P<spaces> *)(?P<description>.*)"
+)
 
 BM_TEMPLATE = """\
 BookmarkBegin
@@ -64,8 +66,8 @@ def validate_toc_format(text_toc_lines: list[str]) -> None:
         if not match:
             raise ValueError(f"Line {line_num} has invalid format: '{line}'")
 
-        padding = match.group(1)  # leading spaces
-        number = match.group(2)  # page number
+        padding = match.group("padding")
+        number = match.group("page")
         page_sections.append(padding + number)
 
     # All page sections must have the same length for alignment
@@ -108,9 +110,9 @@ def load_text_toc(toc_file_path: Path) -> List[TocEntry]:
     validate_toc_format(lines)
     toc = [
         TocEntry(
-            page=match.group(2),  # clean page number
-            level=calculate_toc_level(match.group(3)),  # spaces after page
-            description=match.group(4),  # description
+            page=match.group("page"),
+            level=calculate_toc_level(match.group("spaces")),
+            description=match.group("description"),
         )
         for line in lines
         if (match := RE_TOC_LINE.match(line))
