@@ -16,14 +16,12 @@ CMD_UPDATE_METADATA = (
 )
 
 
-def dump_metadata(input_pdf_path: Path, temp_dir_path: Path) -> Path:
-    """Dump the metadata of the pdf to a temp file in the given temp directory using pdftk"""
-    metadata_file_path = temp_dir_path / "metadata.txt"
+def dump_metadata(input_pdf_path: Path, metadata_file_path: Path) -> None:
+    """Dump the metadata of the pdf to the specified file using pdftk"""
     cmd_dump_metadata = CMD_DUMP_METADATA.format(
         inputpdf=input_pdf_path, metadatafile=metadata_file_path
     )
     os.system(cmd_dump_metadata)
-    return metadata_file_path
 
 
 def strip_meta_desc(metadata_entry: str) -> str:
@@ -54,7 +52,8 @@ def dump_text_toc(
 ) -> None:
     """Dump the table of content of the given PDF to a text file"""
     with TemporaryDirectory() as temp_dir:
-        metadata_file_path = dump_metadata(input_pdf_path, Path(temp_dir))
+        metadata_file_path = Path(temp_dir) / "metadata.txt"
+        dump_metadata(input_pdf_path, metadata_file_path)
         toc = toc_from_metadata(metadata_file_path)
     max_page_number_len = len(max(toc, key=lambda t: len(t[2]))[2])
     if not output_toc_path:
@@ -108,7 +107,8 @@ def update_toc(
     """Update the table of contents of the PDF with new entries"""
     toc = load_toc(toc_file_path)
     with TemporaryDirectory() as temp_dir:
-        metadata_file_path = dump_metadata(input_pdf_path, Path(temp_dir))
+        metadata_file_path = Path(temp_dir) / "metadata.txt"
+        dump_metadata(input_pdf_path, metadata_file_path)
         with metadata_file_path.open() as metadata_file:
             # Acquire the metadata lines not related to the ToC
             metadata = [

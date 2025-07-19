@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from pdftoceditor.pdftoceditor import dump_metadata
 
 
@@ -8,8 +6,8 @@ class TestDumpMetadata:
 
     def test_dump_metadata_creates_file(self, test_pdf_path, tmp_path):
         """Test that dump_metadata creates a metadata file"""
-        metadata_file = dump_metadata(test_pdf_path, tmp_path)
-        metadata_path = Path(metadata_file)
+        metadata_path = tmp_path / "metadata.txt"
+        dump_metadata(test_pdf_path, metadata_path)
 
         # Check that the metadata file was created
         assert metadata_path.exists()
@@ -54,18 +52,15 @@ BookmarkPageNumber: 8"""
 
     def test_dump_metadata_file_location(self, test_pdf_path, tmp_path):
         """Test that dump_metadata creates file in correct location"""
-        metadata_file = dump_metadata(test_pdf_path, tmp_path)
         expected_path = tmp_path / "metadata.txt"
+        dump_metadata(test_pdf_path, expected_path)
 
-        assert metadata_file == expected_path
         assert expected_path.exists()
 
     def test_dump_metadata_nonexistent_pdf(self, tmp_path):
         """Test dump_metadata with non-existent PDF file"""
         nonexistent_pdf = "nonexistent.pdf"
-
-        metadata_file = dump_metadata(nonexistent_pdf, tmp_path)
         expected_path = tmp_path / "metadata.txt"
 
-        # Function should still create the file path, but pdftk will fail
-        assert metadata_file == expected_path
+        # Function should execute without error, but pdftk will fail silently
+        dump_metadata(nonexistent_pdf, expected_path)
