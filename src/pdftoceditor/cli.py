@@ -73,6 +73,22 @@ def handle_pdf_error(e: Exception, input_pdf_path: Path) -> None:
     raise typer.Exit(1)
 
 
+def validate_exclusive_options(
+    output: Optional[Path], in_place: bool
+) -> Optional[Path]:
+    """Validate that --output and --in-place are not used together and return final output path."""
+    if output and in_place:
+        typer.echo(
+            "Error: Cannot use both --output and --in-place options together.", err=True
+        )
+        raise typer.Exit(1)
+
+    if output:
+        validate_output_directory(output)
+
+    return output
+
+
 def version_callback(value: bool) -> None:
     """Provides a version callback for the cli."""
     if value:
@@ -201,6 +217,14 @@ def replace(
             show_default="PDF filename with '_new' suffix",
         ),
     ] = None,
+    in_place: Annotated[
+        bool,
+        typer.Option(
+            "--in-place",
+            "-i",
+            help="Update the PDF file in place (overwrite original)",
+        ),
+    ] = False,
     password: Annotated[
         bool,
         typer.Option(
@@ -211,13 +235,15 @@ def replace(
     ] = False,
 ) -> None:
     """Replace the PDF's table of contents with entries from a text file."""
-    if output:
-        validate_output_directory(output)
+    validated_output = validate_exclusive_options(output, in_place)
+    final_output = pdf_file if in_place else validated_output
 
     pdf_password = get_pdf_password(password)
 
     try:
-        update_toc(pdf_file, toc_file, output, replace_toc=True, password=pdf_password)
+        update_toc(
+            pdf_file, toc_file, final_output, replace_toc=True, password=pdf_password
+        )
     except (PasswordRequiredError, PdfProtectionError) as e:
         handle_pdf_error(e, pdf_file)
 
@@ -252,6 +278,14 @@ def append(
             show_default="PDF filename with '_new' suffix",
         ),
     ] = None,
+    in_place: Annotated[
+        bool,
+        typer.Option(
+            "--in-place",
+            "-i",
+            help="Update the PDF file in place (overwrite original)",
+        ),
+    ] = False,
     password: Annotated[
         bool,
         typer.Option(
@@ -262,12 +296,14 @@ def append(
     ] = False,
 ) -> None:
     """Add new table of contents entries to the existing PDF bookmarks."""
-    if output:
-        validate_output_directory(output)
+    validated_output = validate_exclusive_options(output, in_place)
+    final_output = pdf_file if in_place else validated_output
 
     pdf_password = get_pdf_password(password)
 
     try:
-        update_toc(pdf_file, toc_file, output, replace_toc=False, password=pdf_password)
+        update_toc(
+            pdf_file, toc_file, final_output, replace_toc=False, password=pdf_password
+        )
     except (PasswordRequiredError, PdfProtectionError) as e:
         handle_pdf_error(e, pdf_file)

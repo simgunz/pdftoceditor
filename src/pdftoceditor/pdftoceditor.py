@@ -330,19 +330,26 @@ def update_toc(
             f"{input_pdf_path.stem}{UPDATE_SUFFIX}"
         )
 
-        cmd = ["pdftk", str(input_pdf_path)]
-        if password:
-            cmd.extend(["input_pw", password])
-        cmd.extend(
-            [
-                "update_info",
-                str(metadata_file_path),
-                "output",
-                str(output_path),
-            ]
-        )
+        # Always use a temporary file to avoid pdftk input=output issues
+        with tempfile.NamedTemporaryFile(
+            suffix=".pdf", delete_on_close=False
+        ) as temp_pdf:
+            temp_output_path = Path(temp_pdf.name)
 
-        try:
-            subprocess.run(cmd, check=True, capture_output=True, text=True)
-        except subprocess.CalledProcessError as e:
-            parse_pdftk_error(e.stderr, input_pdf_path)
+            cmd = ["pdftk", str(input_pdf_path)]
+            if password:
+                cmd.extend(["input_pw", password])
+            cmd.extend(
+                [
+                    "update_info",
+                    str(metadata_file_path),
+                    "output",
+                    str(temp_output_path),
+                ]
+            )
+
+            try:
+                subprocess.run(cmd, check=True, capture_output=True, text=True)
+                shutil.move(str(temp_output_path), str(output_path))
+            except subprocess.CalledProcessError as e:
+                parse_pdftk_error(e.stderr, input_pdf_path)
