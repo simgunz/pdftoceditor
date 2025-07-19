@@ -66,16 +66,6 @@ def test_validate_output_directory_existing_dir_passes(tmp_path):
     validate_output_directory(output_path)
 
 
-def test_validate_output_directory_file_not_dir_fails(tmp_path):
-    """Test output directory validation fails when parent is a file"""
-    existing_file = tmp_path / "file.txt"
-    existing_file.write_text("content")
-    output_path = existing_file / "output.txt"
-    with pytest.raises(typer.BadParameter) as exc_info:
-        validate_output_directory(output_path)
-    assert "is not a directory" in str(exc_info.value)
-
-
 def test_cli_validates_pdf_extension():
     """Test CLI rejects non-PDF files"""
     with tempfile.NamedTemporaryFile(suffix=".txt") as temp_file:

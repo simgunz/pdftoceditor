@@ -36,14 +36,9 @@ def validate_pdf_file(path: Path) -> Path:
 
 def validate_output_directory(output_path: Path) -> None:
     """Validate that the output directory exists."""
-    if output_path.parent != Path(".") and not output_path.parent.exists():
-        raise typer.BadParameter(
-            f"Output directory does not exist: {output_path.parent}"
-        )
-    if output_path.parent.exists() and not output_path.parent.is_dir():
-        raise typer.BadParameter(
-            f"Output path parent is not a directory: {output_path.parent}"
-        )
+    parent = output_path.parent
+    if not parent.exists():
+        raise typer.BadParameter(f"Output directory does not exist: {parent}")
 
 
 @app.callback()
