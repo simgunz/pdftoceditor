@@ -2,8 +2,14 @@ import re
 import shutil
 import subprocess
 import tempfile
+from enum import Enum
 from pathlib import Path
 from typing import List, NamedTuple, Optional
+
+
+class PageAlignment(Enum):
+    LEFT = "left"
+    RIGHT = "right"
 
 
 class TocEntry(NamedTuple):
@@ -127,7 +133,7 @@ def calculate_max_page_width(toc: List[TocEntry]) -> int:
 
 
 def format_toc_entry(
-    entry: TocEntry, max_page_width: int, align_page_left: bool
+    entry: TocEntry, max_page_width: int, alignment: PageAlignment
 ) -> str:
     """Format a single ToC entry as text."""
     # Calculate padding for page number alignment
@@ -138,7 +144,11 @@ def format_toc_entry(
     level_indent = " " * LEVEL_INDENT_SPACES * level_number
 
     # Select template and format entry
-    template = TOC_TEMPLATE_LEFT_ALIGN if align_page_left else TOC_TEMPLATE_RIGHT_ALIGN
+    template = (
+        TOC_TEMPLATE_LEFT_ALIGN
+        if alignment == PageAlignment.LEFT
+        else TOC_TEMPLATE_RIGHT_ALIGN
+    )
     return template.format(
         page=entry.page,
         padding=page_padding,
@@ -196,10 +206,11 @@ def dump_text_toc(
         output_toc_path = input_pdf_path.with_suffix(".txt")
 
     # Format and write ToC entries
+    alignment = PageAlignment.LEFT if align_page_left else PageAlignment.RIGHT
     max_page_width = calculate_max_page_width(toc)
     with output_toc_path.open("w") as outfile:
         for entry in toc:
-            formatted_entry = format_toc_entry(entry, max_page_width, align_page_left)
+            formatted_entry = format_toc_entry(entry, max_page_width, alignment)
             print(formatted_entry, file=outfile)
 
 
