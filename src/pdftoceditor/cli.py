@@ -20,13 +20,6 @@ app = typer.Typer(
 )
 
 
-def version_callback(value: bool) -> None:
-    """Provides a version callback for the cli."""
-    if value:
-        typer.echo(f"pdftoceditor version {__version__}")
-        raise typer.Exit()
-
-
 def validate_pdf_file(path: Path) -> Path:
     """Validate that a file has .pdf extension."""
     if path.suffix.lower() != ".pdf":
@@ -39,6 +32,13 @@ def validate_output_directory(output_path: Path) -> None:
     parent = output_path.parent
     if not parent.exists():
         raise typer.BadParameter(f"Output directory does not exist: {parent}")
+
+
+def version_callback(value: bool) -> None:
+    """Provides a version callback for the cli."""
+    if value:
+        typer.echo(f"pdftoceditor version {__version__}")
+        raise typer.Exit()
 
 
 @app.callback()
