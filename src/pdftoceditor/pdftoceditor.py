@@ -13,14 +13,19 @@ BookmarkPageNumber: {page}\
 """
 
 
-def validate_pdftk_installed() -> None:
-    """Validate that pdftk is installed and accessible.
+# Private/Helper Functions
+# ========================
 
-    Raises:
-        FileNotFoundError: If pdftk command is not found in PATH
-    """
-    if shutil.which("pdftk") is None:
-        raise FileNotFoundError("pdftk command not found. Please install pdftk.")
+
+def strip_meta_desc(metadata_entry: str) -> str:
+    return re.search("[^:]*: ([^\n]*)", metadata_entry).group(1)
+
+
+def verify_page_alignment(toc: List[Tuple[str, str, str]]) -> bool:
+    """Return False if the page numbers are not properly right-aligned"""
+    if len({len(toc_entry[2]) for toc_entry in toc}) != 1:
+        return False
+    return True
 
 
 def dump_metadata(input_pdf_path: Path, metadata_file_path: Path) -> None:
@@ -29,10 +34,6 @@ def dump_metadata(input_pdf_path: Path, metadata_file_path: Path) -> None:
         ["pdftk", str(input_pdf_path), "dump_data", "output", str(metadata_file_path)],
         check=True,
     )
-
-
-def strip_meta_desc(metadata_entry: str) -> str:
-    return re.search("[^:]*: ([^\n]*)", metadata_entry).group(1)
 
 
 def toc_from_metadata(metadata_file_path: Path) -> List[Tuple[str, str, str]]:
@@ -49,6 +50,36 @@ def toc_from_metadata(metadata_file_path: Path) -> List[Tuple[str, str, str]]:
             toc.append((description, level, page))
         # Sort by page number
         toc = sorted(toc, key=lambda t: int(t[2]))
+    return toc
+
+
+# Public API Functions
+# ===================
+
+
+def validate_pdftk_installed() -> None:
+    """Validate that pdftk is installed and accessible.
+
+    Raises:
+        FileNotFoundError: If pdftk command is not found in PATH
+    """
+    if shutil.which("pdftk") is None:
+        raise FileNotFoundError("pdftk command not found. Please install pdftk.")
+
+
+def load_toc(toc_file_path: Path) -> List[Tuple[str, str, str]]:
+    """Reads the ToC from the text file and returns a list of tuple (description, level, page)"""
+    toc = list()
+    with toc_file_path.open() as f:
+        for line in f:
+            m = re.search(r"(\s*\d+) ( *)(.*)", line)
+            if m:
+                page = m.group(1)
+                level = str((len(m.group(2)) / 2) + 1)
+                description = m.group(3)
+                toc.append((description, level, page))
+    if not verify_page_alignment(toc):
+        raise Exception("Page numbers are not properly aligned.")
     return toc
 
 
@@ -82,29 +113,6 @@ def dump_text_toc(
                 description=description,
             )
             print(text_toc_entry, file=outfile)
-
-
-def verify_page_alignment(toc: List[Tuple[str, str, str]]) -> bool:
-    """Return False if the page numbers are not properly right-aligned"""
-    if len({len(toc_entry[2]) for toc_entry in toc}) != 1:
-        return False
-    return True
-
-
-def load_toc(toc_file_path: Path) -> List[Tuple[str, str, str]]:
-    """Reads the ToC from the text file and returns a list of tuple (description, level, page)"""
-    toc = list()
-    with toc_file_path.open() as f:
-        for line in f:
-            m = re.search(r"(\s*\d+) ( *)(.*)", line)
-            if m:
-                page = m.group(1)
-                level = str((len(m.group(2)) / 2) + 1)
-                description = m.group(3)
-                toc.append((description, level, page))
-    if not verify_page_alignment(toc):
-        raise Exception("Page numbers are not properly aligned.")
-    return toc
 
 
 def update_toc(
