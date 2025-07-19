@@ -42,6 +42,26 @@ def version_callback(value: bool) -> None:
 
 
 @app.command()
+def dump(
+    input_pdf_path: Annotated[Path, typer.Argument(help="Input PDF file")],
+    output_toc_path: Annotated[
+        Optional[Path],
+        typer.Option("--output-toc", "-t", help="Output table of content text file"),
+    ] = None,
+    align_left: Annotated[
+        bool,
+        typer.Option(
+            "--align-left",
+            "-r",
+            help="Align the page numbers to the left on the text table of content",
+        ),
+    ] = False,
+) -> None:
+    """Dump the table of content of input PDF to a text file."""
+    dump_text_toc(input_pdf_path, output_toc_path, align_left)
+
+
+@app.command()
 def replace(
     input_pdf_path: Annotated[Path, typer.Argument(help="Input PDF file")],
     toc_file_path: Annotated[Path, typer.Argument(help="Table of content text file")],
@@ -69,23 +89,3 @@ def append(
 ) -> None:
     """Append the table of content specified in ToC file to the existing one of input PDF."""
     update_toc(input_pdf_path, toc_file_path, output, replace_toc=False)
-
-
-@app.command()
-def dump(
-    input_pdf_path: Annotated[Path, typer.Argument(help="Input PDF file")],
-    output_toc_path: Annotated[
-        Optional[Path],
-        typer.Option("--output-toc", "-t", help="Output table of content text file"),
-    ] = None,
-    align_left: Annotated[
-        bool,
-        typer.Option(
-            "--align-left",
-            "-r",
-            help="Align the page numbers to the left on the text table of content",
-        ),
-    ] = False,
-) -> None:
-    """Dump the table of content of input PDF to a text file."""
-    dump_text_toc(input_pdf_path, output_toc_path, align_left)
