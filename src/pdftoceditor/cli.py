@@ -57,7 +57,7 @@ def dump(
         ),
     ] = False,
 ) -> None:
-    """Dump the table of content of input PDF to a text file."""
+    """Extract the existing table of contents from a PDF to a text file."""
     dump_text_toc(input_pdf_path, output_toc_path, align_left)
 
 
@@ -72,7 +72,7 @@ def replace(
         ),
     ] = None,
 ) -> None:
-    """Replace the table of content of input PDF with the one specified in ToC file."""
+    """Replace the PDF's table of contents with entries from a text file."""
     update_toc(input_pdf_path, toc_file_path, output, replace_toc=True)
 
 
@@ -87,5 +87,5 @@ def append(
         ),
     ] = None,
 ) -> None:
-    """Append the table of content specified in ToC file to the existing one of input PDF."""
+    """Add new table of contents entries to the existing PDF bookmarks."""
     update_toc(input_pdf_path, toc_file_path, output, replace_toc=False)
