@@ -12,7 +12,7 @@ class TocEntry(NamedTuple):
     description: str
 
 
-RE_TOC_LINE = re.compile(r"(\s*\d+) ( *)(.*)")
+RE_TOC_LINE = re.compile(r"(\s*)(\d+)( *)(.*)")
 
 BM_TEMPLATE = """\
 BookmarkBegin
@@ -30,11 +30,48 @@ def strip_meta_desc(metadata_entry: str) -> str:
     return re.search("[^:]*: ([^\n]*)", metadata_entry).group(1)
 
 
-def verify_page_alignment(toc: List[TocEntry]) -> bool:
-    """Return False if the page numbers are not properly right-aligned"""
-    if len({len(toc_entry.page) for toc_entry in toc}) != 1:
-        return False
-    return True
+def calculate_toc_level(indentation_spaces: str) -> str:
+    """Calculate ToC level from indentation spaces.
+
+    Each level is indented by 2 spaces:
+    - 0 spaces = level 1
+    - 2 spaces = level 2
+    - 4 spaces = level 3, etc.
+    """
+    spaces_count = len(indentation_spaces)
+    level = (spaces_count // 2) + 1
+    return str(float(level))
+
+
+def validate_toc_format(text_toc_lines: list[str]) -> None:
+    """Validate that the ToC text format is correct.
+
+    Raises:
+        ValueError: If the file is empty
+        ValueError: If any line has invalid format
+        ValueError: If page numbers are not properly aligned
+    """
+    non_empty_lines = [line for line in text_toc_lines if line.strip()]
+
+    # ToC file cannot be empty
+    if not non_empty_lines:
+        raise ValueError("ToC file cannot be empty")
+
+    # All lines must be valid ToC lines
+    page_sections = []
+    for line_num, line in enumerate(non_empty_lines, 1):
+        match = RE_TOC_LINE.match(line)
+        if not match:
+            raise ValueError(f"Line {line_num} has invalid format: '{line}'")
+
+        padding = match.group(1)  # leading spaces
+        number = match.group(2)  # page number
+        page_sections.append(padding + number)
+
+    # All page sections must have the same length for alignment
+    first_length = len(page_sections[0])
+    if not all(len(section) == first_length for section in page_sections):
+        raise ValueError("Page numbers are not properly aligned")
 
 
 def dump_metadata(input_pdf_path: Path, metadata_file_path: Path) -> None:
@@ -67,18 +104,17 @@ def load_metadata_toc(metadata_file_path: Path) -> List[TocEntry]:
 
 def load_text_toc(toc_file_path: Path) -> List[TocEntry]:
     """Reads the ToC from the text file and returns a list of TocEntry objects"""
-    with toc_file_path.open() as f:
-        toc = [
-            TocEntry(
-                page=match.group(1),
-                level=str((len(match.group(2)) / 2) + 1),
-                description=match.group(3),
-            )
-            for line in f
-            if (match := RE_TOC_LINE.match(line))
-        ]
-    if not verify_page_alignment(toc):
-        raise Exception("Page numbers are not properly aligned.")
+    lines = toc_file_path.read_text().splitlines()
+    validate_toc_format(lines)
+    toc = [
+        TocEntry(
+            page=match.group(2),  # clean page number
+            level=calculate_toc_level(match.group(3)),  # spaces after page
+            description=match.group(4),  # description
+        )
+        for line in lines
+        if (match := RE_TOC_LINE.match(line))
+    ]
     return toc
 
 

@@ -23,11 +23,11 @@ class TestLoadToc:
         assert len(toc) == 5
 
         # Check entries
-        assert toc[0] == ("  1", "1.0", "Introduction")
-        assert toc[1] == ("  2", "2.0", "Background")  # Subsection (2 spaces)
-        assert toc[2] == ("  3", "2.0", "Motivation")  # Subsection (2 spaces)
-        assert toc[3] == ("  4", "1.0", "Methodology")
-        assert toc[4] == ("  5", "1.0", "Results")
+        assert toc[0] == ("1", "1.0", "Introduction")
+        assert toc[1] == ("2", "2.0", "Background")  # Subsection (2 spaces)
+        assert toc[2] == ("3", "2.0", "Motivation")  # Subsection (2 spaces)
+        assert toc[3] == ("4", "1.0", "Methodology")
+        assert toc[4] == ("5", "1.0", "Results")
 
     def test_load_toc_with_subsections(self, tmp_path):
         """Test loading table of contents with multiple levels"""
@@ -46,12 +46,12 @@ class TestLoadToc:
         assert len(toc) == 6
 
         # Check levels
-        assert toc[0] == ("  1", "1.0", "Chapter 1")  # Level 1
-        assert toc[1] == ("  2", "2.0", "Section 1.1")  # Level 2 (2 spaces)
-        assert toc[2] == ("  3", "3.0", "Subsection 1.1.1")  # Level 3 (4 spaces)
-        assert toc[3] == ("  4", "3.0", "Subsection 1.1.2")  # Level 3 (4 spaces)
-        assert toc[4] == ("  5", "2.0", "Section 1.2")  # Level 2 (2 spaces)
-        assert toc[5] == (" 10", "1.0", "Chapter 2")  # Level 1
+        assert toc[0] == ("1", "1.0", "Chapter 1")  # Level 1
+        assert toc[1] == ("2", "2.0", "Section 1.1")  # Level 2 (2 spaces)
+        assert toc[2] == ("3", "3.0", "Subsection 1.1.1")  # Level 3 (4 spaces)
+        assert toc[3] == ("4", "3.0", "Subsection 1.1.2")  # Level 3 (4 spaces)
+        assert toc[4] == ("5", "2.0", "Section 1.2")  # Level 2 (2 spaces)
+        assert toc[5] == ("10", "1.0", "Chapter 2")  # Level 1
 
     def test_load_toc_misaligned_pages(self, tmp_path):
         """Test that misaligned page numbers raise an exception"""
@@ -70,8 +70,8 @@ class TestLoadToc:
         toc_file = tmp_path / "empty_toc.txt"
         toc_file.write_text("")
 
-        # Empty file should raise an exception due to page alignment check
-        with pytest.raises(Exception, match="Page numbers are not properly aligned"):
+        # Empty file should raise an exception
+        with pytest.raises(ValueError, match="ToC file cannot be empty"):
             load_text_toc(toc_file)
 
     def test_load_toc_whitespace_only(self, tmp_path):
@@ -79,8 +79,8 @@ class TestLoadToc:
         toc_file = tmp_path / "whitespace_toc.txt"
         toc_file.write_text("   \n  \n\t\n")
 
-        # File with only whitespace should raise an exception due to page alignment check
-        with pytest.raises(Exception, match="Page numbers are not properly aligned"):
+        # File with only whitespace should raise an exception
+        with pytest.raises(ValueError, match="ToC file cannot be empty"):
             load_text_toc(toc_file)
 
     def test_load_toc_large_page_numbers(self, tmp_path):
