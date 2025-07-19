@@ -3,7 +3,14 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, NamedTuple, Optional
+
+
+class TocEntry(NamedTuple):
+    description: str
+    level: str
+    page: str
+
 
 BM_TEMPLATE = """\
 BookmarkBegin
@@ -21,9 +28,9 @@ def strip_meta_desc(metadata_entry: str) -> str:
     return re.search("[^:]*: ([^\n]*)", metadata_entry).group(1)
 
 
-def verify_page_alignment(toc: List[Tuple[str, str, str]]) -> bool:
+def verify_page_alignment(toc: List[TocEntry]) -> bool:
     """Return False if the page numbers are not properly right-aligned"""
-    if len({len(toc_entry[2]) for toc_entry in toc}) != 1:
+    if len({len(toc_entry.page) for toc_entry in toc}) != 1:
         return False
     return True
 
@@ -36,24 +43,24 @@ def dump_metadata(input_pdf_path: Path, metadata_file_path: Path) -> None:
     )
 
 
-def toc_from_metadata(metadata_file_path: Path) -> List[Tuple[str, str, str]]:
-    """Reads the ToC from the PDF metadata and returns a list of tuple (description, level, page)"""
+def toc_from_metadata(metadata_file_path: Path) -> List[TocEntry]:
+    """Reads the ToC from the PDF metadata and returns a list of TocEntry objects"""
     with metadata_file_path.open() as f:
         lines = f.readlines()
 
         # Each bookmark has: BookmarkTitle, BookmarkLevel, BookmarkPageNumber on lines i+1, i+2, i+3
         toc = (
-            (
-                strip_meta_desc(lines[i + 1]),
-                strip_meta_desc(lines[i + 2]),
-                strip_meta_desc(lines[i + 3]),
+            TocEntry(
+                description=strip_meta_desc(lines[i + 1]),
+                level=strip_meta_desc(lines[i + 2]),
+                page=strip_meta_desc(lines[i + 3]),
             )
             for i, line in enumerate(lines)
             if "BookmarkBegin" in line
         )
 
-        # Sort by page number (third element)
-        return sorted(toc, key=lambda entry: int(entry[2]))
+        # Sort by page number
+        return sorted(toc, key=lambda entry: int(entry.page))
 
 
 # Public API Functions
@@ -70,8 +77,8 @@ def validate_pdftk_installed() -> None:
         raise FileNotFoundError("pdftk command not found. Please install pdftk.")
 
 
-def load_toc(toc_file_path: Path) -> List[Tuple[str, str, str]]:
-    """Reads the ToC from the text file and returns a list of tuple (description, level, page)"""
+def load_toc(toc_file_path: Path) -> List[TocEntry]:
+    """Reads the ToC from the text file and returns a list of TocEntry objects"""
     toc = list()
     with toc_file_path.open() as f:
         for line in f:
@@ -80,7 +87,7 @@ def load_toc(toc_file_path: Path) -> List[Tuple[str, str, str]]:
                 page = m.group(1)
                 level = str((len(m.group(2)) / 2) + 1)
                 description = m.group(3)
-                toc.append((description, level, page))
+                toc.append(TocEntry(description=description, level=level, page=page))
     if not verify_page_alignment(toc):
         raise Exception("Page numbers are not properly aligned.")
     return toc
@@ -98,7 +105,7 @@ def dump_text_toc(
         metadata_file_path = Path(temp_file.name)
         dump_metadata(input_pdf_path, metadata_file_path)
         toc = toc_from_metadata(metadata_file_path)
-    max_page_number_len = len(max(toc, key=lambda t: len(t[2]))[2])
+    max_page_number_len = len(max(toc, key=lambda entry: len(entry.page)).page)
     if not output_toc_path:
         output_toc_path = input_pdf_path.with_suffix(".txt")
     if align_page_left:
@@ -138,7 +145,7 @@ def update_toc(
             ]
             if not replace_toc:
                 toc += toc_from_metadata(metadata_file_path)
-                toc = sorted(toc, key=lambda t: int(t[2]))
+                toc = sorted(toc, key=lambda entry: int(entry.page))
         for description, level, page in toc:
             metadata_toc_entry = BM_TEMPLATE.format(
                 description=description, level=level, page=page.strip()
