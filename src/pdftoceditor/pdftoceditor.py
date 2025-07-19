@@ -63,20 +63,6 @@ def toc_from_metadata(metadata_file_path: Path) -> List[TocEntry]:
         return sorted(toc, key=lambda entry: int(entry.page))
 
 
-# Public API Functions
-# ===================
-
-
-def validate_pdftk_installed() -> None:
-    """Validate that pdftk is installed and accessible.
-
-    Raises:
-        FileNotFoundError: If pdftk command is not found in PATH
-    """
-    if shutil.which("pdftk") is None:
-        raise FileNotFoundError("pdftk command not found. Please install pdftk.")
-
-
 def load_toc(toc_file_path: Path) -> List[TocEntry]:
     """Reads the ToC from the text file and returns a list of TocEntry objects"""
     toc = list()
@@ -91,6 +77,20 @@ def load_toc(toc_file_path: Path) -> List[TocEntry]:
     if not verify_page_alignment(toc):
         raise Exception("Page numbers are not properly aligned.")
     return toc
+
+
+# Public API Functions
+# ===================
+
+
+def validate_pdftk_installed() -> None:
+    """Validate that pdftk is installed and accessible.
+
+    Raises:
+        FileNotFoundError: If pdftk command is not found in PATH
+    """
+    if shutil.which("pdftk") is None:
+        raise FileNotFoundError("pdftk command not found. Please install pdftk.")
 
 
 def dump_text_toc(
