@@ -53,16 +53,16 @@ BookmarkPageNumber: 8
         assert len(toc) == 7
 
         # Check entries in sorted order by page number
-        assert toc[0] == ("Introduction", "1", "2")
-        assert toc[1] == ("Background", "2", "3")
-        assert toc[2] == ("Motivation", "2", "4")
-        assert toc[3] == ("Methodology", "1", "5")
-        assert toc[4] == ("Data Collection", "2", "6")
-        assert toc[5] == ("Results", "1", "7")
-        assert toc[6] == ("Conclusion", "1", "8")
+        assert toc[0] == ("2", "1", "Introduction")
+        assert toc[1] == ("3", "2", "Background")
+        assert toc[2] == ("4", "2", "Motivation")
+        assert toc[3] == ("5", "1", "Methodology")
+        assert toc[4] == ("6", "2", "Data Collection")
+        assert toc[5] == ("7", "1", "Results")
+        assert toc[6] == ("8", "1", "Conclusion")
 
         # Check that entries are sorted by page number
-        page_numbers = [int(entry[2]) for entry in toc]
+        page_numbers = [int(entry[0]) for entry in toc]
         assert page_numbers == sorted(page_numbers)
 
     def test_toc_from_metadata_empty_file(self, tmp_path):
@@ -114,6 +114,6 @@ BookmarkPageNumber: 8
 
         # Check that entries are sorted by page number
         assert len(toc) == 3
-        assert toc[0] == ("Chapter 1", "1", "1")
-        assert toc[1] == ("Chapter 2", "1", "8")
-        assert toc[2] == ("Chapter 3", "1", "15")
+        assert toc[0] == ("1", "1", "Chapter 1")
+        assert toc[1] == ("8", "1", "Chapter 2")
+        assert toc[2] == ("15", "1", "Chapter 3")

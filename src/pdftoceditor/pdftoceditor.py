@@ -7,9 +7,9 @@ from typing import List, NamedTuple, Optional
 
 
 class TocEntry(NamedTuple):
-    description: str
-    level: str
     page: str
+    level: str
+    description: str
 
 
 RE_TOC_LINE = re.compile(r"(\s*\d+) ( *)(.*)")
@@ -53,9 +53,9 @@ def load_metadata_toc(metadata_file_path: Path) -> List[TocEntry]:
         # Each bookmark has: BookmarkTitle, BookmarkLevel, BookmarkPageNumber on lines i+1, i+2, i+3
         toc = (
             TocEntry(
-                description=strip_meta_desc(lines[i + 1]),
-                level=strip_meta_desc(lines[i + 2]),
                 page=strip_meta_desc(lines[i + 3]),
+                level=strip_meta_desc(lines[i + 2]),
+                description=strip_meta_desc(lines[i + 1]),
             )
             for i, line in enumerate(lines)
             if "BookmarkBegin" in line
@@ -70,9 +70,9 @@ def load_text_toc(toc_file_path: Path) -> List[TocEntry]:
     with toc_file_path.open() as f:
         toc = [
             TocEntry(
-                description=match.group(3),
-                level=str((len(match.group(2)) / 2) + 1),
                 page=match.group(1),
+                level=str((len(match.group(2)) / 2) + 1),
+                description=match.group(3),
             )
             for line in f
             if (match := RE_TOC_LINE.match(line))
@@ -116,7 +116,7 @@ def dump_text_toc(
     else:
         text_toc_entry_template = "{pagepadspace}{page} {descspace}{description}"
     with output_toc_path.open("w") as outfile:
-        for description, level, page in toc:
+        for page, level, description in toc:
             pagepadspace = " " * (max_page_number_len - len(page))
             descspace = "  " * (int(level) - 1)
             text_toc_entry = text_toc_entry_template.format(
@@ -149,7 +149,7 @@ def update_toc(
             if not replace_toc:
                 toc += load_metadata_toc(metadata_file_path)
                 toc = sorted(toc, key=lambda entry: int(entry.page))
-        for description, level, page in toc:
+        for page, level, description in toc:
             metadata_toc_entry = BM_TEMPLATE.format(
                 description=description, level=level, page=page.strip()
             )

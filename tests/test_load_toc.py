@@ -23,11 +23,11 @@ class TestLoadToc:
         assert len(toc) == 5
 
         # Check entries
-        assert toc[0] == ("Introduction", "1.0", "  1")
-        assert toc[1] == ("Background", "2.0", "  2")  # Subsection (2 spaces)
-        assert toc[2] == ("Motivation", "2.0", "  3")  # Subsection (2 spaces)
-        assert toc[3] == ("Methodology", "1.0", "  4")
-        assert toc[4] == ("Results", "1.0", "  5")
+        assert toc[0] == ("  1", "1.0", "Introduction")
+        assert toc[1] == ("  2", "2.0", "Background")  # Subsection (2 spaces)
+        assert toc[2] == ("  3", "2.0", "Motivation")  # Subsection (2 spaces)
+        assert toc[3] == ("  4", "1.0", "Methodology")
+        assert toc[4] == ("  5", "1.0", "Results")
 
     def test_load_toc_with_subsections(self, tmp_path):
         """Test loading table of contents with multiple levels"""
@@ -46,12 +46,12 @@ class TestLoadToc:
         assert len(toc) == 6
 
         # Check levels
-        assert toc[0] == ("Chapter 1", "1.0", "  1")  # Level 1
-        assert toc[1] == ("Section 1.1", "2.0", "  2")  # Level 2 (2 spaces)
-        assert toc[2] == ("Subsection 1.1.1", "3.0", "  3")  # Level 3 (4 spaces)
-        assert toc[3] == ("Subsection 1.1.2", "3.0", "  4")  # Level 3 (4 spaces)
-        assert toc[4] == ("Section 1.2", "2.0", "  5")  # Level 2 (2 spaces)
-        assert toc[5] == ("Chapter 2", "1.0", " 10")  # Level 1
+        assert toc[0] == ("  1", "1.0", "Chapter 1")  # Level 1
+        assert toc[1] == ("  2", "2.0", "Section 1.1")  # Level 2 (2 spaces)
+        assert toc[2] == ("  3", "3.0", "Subsection 1.1.1")  # Level 3 (4 spaces)
+        assert toc[3] == ("  4", "3.0", "Subsection 1.1.2")  # Level 3 (4 spaces)
+        assert toc[4] == ("  5", "2.0", "Section 1.2")  # Level 2 (2 spaces)
+        assert toc[5] == (" 10", "1.0", "Chapter 2")  # Level 1
 
     def test_load_toc_misaligned_pages(self, tmp_path):
         """Test that misaligned page numbers raise an exception"""
@@ -95,6 +95,6 @@ class TestLoadToc:
         toc = load_text_toc(toc_file)
 
         assert len(toc) == 3
-        assert toc[0] == ("Chapter 1", "1.0", "100")
-        assert toc[1] == ("Section 1.1", "2.0", "101")
-        assert toc[2] == ("Chapter 2", "1.0", "999")
+        assert toc[0] == ("100", "1.0", "Chapter 1")
+        assert toc[1] == ("101", "2.0", "Section 1.1")
+        assert toc[2] == ("999", "1.0", "Chapter 2")
