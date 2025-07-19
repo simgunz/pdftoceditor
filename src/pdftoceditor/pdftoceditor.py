@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import tempfile
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -14,6 +15,16 @@ CMD_DUMP_METADATA = "pdftk '{inputpdf}' dump_data output {metadatafile}"
 CMD_UPDATE_METADATA = (
     "pdftk '{inputpdf}' update_info {metadatafile} output '{outputpdf}'"
 )
+
+
+def validate_pdftk_installed() -> None:
+    """Validate that pdftk is installed and accessible.
+
+    Raises:
+        FileNotFoundError: If pdftk command is not found in PATH
+    """
+    if shutil.which("pdftk") is None:
+        raise FileNotFoundError("pdftk command not found. Please install pdftk.")
 
 
 def dump_metadata(input_pdf_path: Path, metadata_file_path: Path) -> None:

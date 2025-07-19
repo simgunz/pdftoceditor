@@ -8,7 +8,11 @@ from typing import Annotated, Optional
 import typer
 
 from pdftoceditor import __version__
-from pdftoceditor.pdftoceditor import dump_text_toc, update_toc
+from pdftoceditor.pdftoceditor import (
+    dump_text_toc,
+    update_toc,
+    validate_pdftk_installed,
+)
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -54,7 +58,11 @@ def main(
     100 Section 3\n
     ```
     """
-    pass
+    try:
+        validate_pdftk_installed()
+    except FileNotFoundError as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(1)
 
 
 @app.command()
