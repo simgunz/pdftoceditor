@@ -23,6 +23,7 @@ RE_TOC_LINE = re.compile(
     r"(?P<padding>\s*)(?P<page>\d+)(?P<spaces> *)(?P<description>.*)"
 )
 RE_METADATA_ENTRY = re.compile(r"[^:]*: (?P<value>[^\n]*)")
+RE_BOOKMARK_LINE = re.compile(r"Bookmark.*")
 
 # Metadata bookmark structure offsets from BookmarkBegin line
 BOOKMARK_TITLE_OFFSET = 1
@@ -33,6 +34,9 @@ BOOKMARK_PAGE_OFFSET = 3
 LEVEL_INDENT_SPACES = 2  # Two spaces per indentation level
 TOC_TEMPLATE_LEFT_ALIGN = "{page}{padding} {indent}{description}"
 TOC_TEMPLATE_RIGHT_ALIGN = "{padding}{page} {indent}{description}"
+
+# Update ToC constants
+UPDATE_SUFFIX = "_updated_toc"
 
 BM_TEMPLATE = """\
 BookmarkBegin
@@ -221,31 +225,45 @@ def update_toc(
     replace_toc: bool = False,
 ) -> None:
     """Update the table of contents of the PDF with new entries"""
-    toc = load_text_toc(toc_file_path)
+    new_toc = load_text_toc(toc_file_path)
+
     with tempfile.NamedTemporaryFile(
         mode="w+", suffix=".txt", delete_on_close=False
     ) as temp_file:
         metadata_file_path = Path(temp_file.name)
         dump_metadata(input_pdf_path, metadata_file_path)
-        with metadata_file_path.open() as metadata_file:
-            # Acquire the metadata lines not related to the ToC
-            metadata = [
-                line for line in metadata_file if not re.match("Bookmark.*", line)
-            ]
-            if not replace_toc:
-                toc += load_metadata_toc(metadata_file_path)
-                toc = sorted(toc, key=lambda entry: int(entry.page))
-        for page, level, description in toc:
-            metadata_toc_entry = BM_TEMPLATE.format(
-                description=description, level=level, page=page.strip()
+
+        # Filter out existing bookmarks from metadata
+        metadata_lines = metadata_file_path.read_text().splitlines(keepends=True)
+        new_metadata_lines = [
+            line for line in metadata_lines if not RE_BOOKMARK_LINE.match(line)
+        ]
+
+        # Combine ToC entries
+        if replace_toc:
+            final_toc = new_toc
+        else:
+            existing_toc = load_metadata_toc(metadata_file_path)
+            final_toc = sorted(
+                new_toc + existing_toc, key=lambda entry: int(entry.page)
             )
-            metadata.append(metadata_toc_entry + "\n")
-        with metadata_file_path.open("w") as metadata_file:
-            metadata_file.write("".join(metadata))
-        if not output_pdf_path:
-            output_pdf_path = input_pdf_path.with_stem(
-                f"{input_pdf_path.stem}_updated_toc"
+
+        # Add formatted ToC entries to metadata
+        for entry in final_toc:
+            bookmark_entry = BM_TEMPLATE.format(
+                description=entry.description,
+                level=entry.level,
+                page=entry.page.strip(),
             )
+            new_metadata_lines.append(bookmark_entry + "\n")
+
+        # Write updated metadata and create output PDF
+        metadata_file_path.write_text("".join(new_metadata_lines))
+
+        output_path = output_pdf_path or input_pdf_path.with_stem(
+            f"{input_pdf_path.stem}{UPDATE_SUFFIX}"
+        )
+
         subprocess.run(
             [
                 "pdftk",
@@ -253,7 +271,7 @@ def update_toc(
                 "update_info",
                 str(metadata_file_path),
                 "output",
-                str(output_pdf_path),
+                str(output_path),
             ],
             check=True,
         )
