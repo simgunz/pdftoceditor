@@ -252,7 +252,7 @@ def validate_pdftk_installed() -> None:
 def dump_text_toc(
     input_pdf_path: Path,
     output_toc_path: Optional[Path] = None,
-    align_page_left: bool = False,
+    alignment: PageAlignment = PageAlignment.RIGHT,
     password: Optional[str] = None,
 ) -> None:
     """Dump the table of content of the given PDF to a text file"""
@@ -275,7 +275,6 @@ def dump_text_toc(
         ).with_suffix(".txt")
 
     # Format and write ToC entries
-    alignment = PageAlignment.LEFT if align_page_left else PageAlignment.RIGHT
     max_page_width = calculate_max_page_width(toc)
     with output_toc_path.open("w") as outfile:
         for entry in toc:

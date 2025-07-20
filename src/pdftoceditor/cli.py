@@ -242,11 +242,8 @@ def dump(
 
     pdf_password = get_pdf_password(password, ask_password)
 
-    # Convert PageAlignment enum to boolean for align_page_left parameter
-    align_page_left = pages_alignment == PageAlignment.LEFT
-
     try:
-        dump_text_toc(pdf_file, output, align_page_left, pdf_password)
+        dump_text_toc(pdf_file, output, pages_alignment, pdf_password)
     except (PasswordRequiredError, PdfProtectionError, EmptyTocError) as e:
         handle_pdf_error(e, pdf_file)
 

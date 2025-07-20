@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from pdftoceditor.pdftoceditor import EmptyTocError, dump_text_toc
+from pdftoceditor.pdftoceditor import EmptyTocError, PageAlignment, dump_text_toc
 
 
 def test_dump_text_toc_default_output(basic_with_toc_pdf_path, tmp_path):
@@ -74,9 +74,7 @@ def test_dump_text_toc_align_left(double_digit_pages_with_toc_pdf_path, tmp_path
     """Test dumping ToC with left-aligned page numbers"""
     output_file = tmp_path / "left_aligned_toc.txt"
 
-    dump_text_toc(
-        double_digit_pages_with_toc_pdf_path, output_file, align_page_left=True
-    )
+    dump_text_toc(double_digit_pages_with_toc_pdf_path, output_file, PageAlignment.LEFT)
 
     # Check that the output file was created
     assert output_file.exists()
@@ -105,7 +103,7 @@ def test_dump_text_toc_align_right(double_digit_pages_with_toc_pdf_path, tmp_pat
     output_file = tmp_path / "right_aligned_toc.txt"
 
     dump_text_toc(
-        double_digit_pages_with_toc_pdf_path, output_file, align_page_left=False
+        double_digit_pages_with_toc_pdf_path, output_file, PageAlignment.RIGHT
     )
 
     # Check that the output file was created
@@ -163,7 +161,7 @@ def test_dump_text_toc_empty_pdf_with_alignment_should_raise_empty_toc_error(
 
     # Both alignment options should raise EmptyTocError with empty TOC
     with pytest.raises(EmptyTocError):
-        dump_text_toc(basic_no_toc_pdf_path, output_left, align_page_left=True)
+        dump_text_toc(basic_no_toc_pdf_path, output_left, PageAlignment.LEFT)
 
     with pytest.raises(EmptyTocError):
-        dump_text_toc(basic_no_toc_pdf_path, output_right, align_page_left=False)
+        dump_text_toc(basic_no_toc_pdf_path, output_right, PageAlignment.RIGHT)
