@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from pdftoceditor.pdftoceditor import (
+    IncorrectPasswordError,
     InvalidPdfError,
     PasswordRequiredError,
     UnsupportedEncryptionError,
@@ -90,7 +91,7 @@ class TestPasswordRequiredPDFs:
             output_path = Path(tmp_file.name)
 
         try:
-            with pytest.raises(PasswordRequiredError):
+            with pytest.raises(IncorrectPasswordError):
                 dump_text_toc(
                     pdf_path,
                     output_path,

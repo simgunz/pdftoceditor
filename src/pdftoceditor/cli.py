@@ -10,6 +10,7 @@ import typer
 from pdftoceditor import __version__
 from pdftoceditor.pdftoceditor import (
     EmptyTocError,
+    IncorrectPasswordError,
     PageAlignment,
     PasswordRequiredError,
     PdfProtectionError,
@@ -61,6 +62,12 @@ def handle_pdf_error(e: Exception, input_pdf_path: Path) -> None:
         typer.echo(
             f"Error: PDF '{input_pdf_path}' requires a password.\n"
             "Use --password VALUE or --ask-password.",
+            err=True,
+        )
+    elif isinstance(e, IncorrectPasswordError):
+        typer.echo(
+            f"Error: Incorrect password provided for PDF '{input_pdf_path}'.\n"
+            "Please verify the password and try again.",
             err=True,
         )
     elif isinstance(e, PdfProtectionError):
@@ -244,7 +251,12 @@ def dump(
 
     try:
         dump_text_toc(pdf_file, output, pages_alignment, pdf_password)
-    except (PasswordRequiredError, PdfProtectionError, EmptyTocError) as e:
+    except (
+        PasswordRequiredError,
+        IncorrectPasswordError,
+        PdfProtectionError,
+        EmptyTocError,
+    ) as e:
         handle_pdf_error(e, pdf_file)
 
 
@@ -267,7 +279,7 @@ def replace(
         update_toc(
             pdf_file, toc_file, final_output, replace_toc=True, password=pdf_password
         )
-    except (PasswordRequiredError, PdfProtectionError) as e:
+    except (PasswordRequiredError, IncorrectPasswordError, PdfProtectionError) as e:
         handle_pdf_error(e, pdf_file)
 
 
@@ -290,5 +302,5 @@ def append(
         update_toc(
             pdf_file, toc_file, final_output, replace_toc=False, password=pdf_password
         )
-    except (PasswordRequiredError, PdfProtectionError) as e:
+    except (PasswordRequiredError, IncorrectPasswordError, PdfProtectionError) as e:
         handle_pdf_error(e, pdf_file)

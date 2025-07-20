@@ -25,6 +25,12 @@ class PasswordRequiredError(PdfProtectionError):
     pass
 
 
+class IncorrectPasswordError(PdfProtectionError):
+    """Raised when an incorrect password is provided for a PDF."""
+
+    pass
+
+
 class UnsupportedEncryptionError(PdfProtectionError):
     """Raised when PDF uses encryption that pdftk cannot handle."""
 
@@ -85,7 +91,19 @@ def parse_pdftk_error(stderr: str, pdf_path: Path) -> None:
     error_text = stderr.lower()
 
     if "owner or user password required" in error_text:
-        raise PasswordRequiredError(f"PDF '{pdf_path}' requires a password to access")
+        if "but incorrect" in error_text:
+            raise IncorrectPasswordError(
+                f"Incorrect password provided for PDF '{pdf_path}'"
+            )
+        elif "but not given" in error_text:
+            raise PasswordRequiredError(
+                f"PDF '{pdf_path}' requires a password to access"
+            )
+        else:
+            # If we get here, pdftk's password error message format has changed
+            raise PdfProtectionError(
+                f"Unknown password error for PDF '{pdf_path}': {stderr.strip()}"
+            )
     elif "unknown.encryption.type" in error_text:
         raise UnsupportedEncryptionError(
             f"PDF '{pdf_path}' uses unsupported encryption. "
