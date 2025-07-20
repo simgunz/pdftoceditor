@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -39,18 +38,21 @@ def validate_output_directory(output_path: Path) -> None:
         raise typer.BadParameter(f"Output directory does not exist: {parent}")
 
 
-def get_pdf_password(prompt_for_password: bool) -> Optional[str]:
-    """Get PDF password from flag prompting or environment variable.
+def get_pdf_password(password: Optional[str], ask_password: bool) -> Optional[str]:
+    """Get PDF password from option value or prompting.
 
     Args:
-        prompt_for_password: If True, prompt user for password
+        password: Password value from --password option or PDF_PASSWORD env var
+        ask_password: If True, prompt user for password
 
     Returns:
-        Password string or None if no password needed
+        Password string or None if no password provided
     """
-    if prompt_for_password:
+    if password is not None:
+        return password
+    if ask_password:
         return typer.prompt("Password", hide_input=True)
-    return os.environ.get("PDF_PASSWORD")
+    return None
 
 
 def handle_pdf_error(e: Exception, input_pdf_path: Path) -> None:
@@ -58,7 +60,7 @@ def handle_pdf_error(e: Exception, input_pdf_path: Path) -> None:
     if isinstance(e, PasswordRequiredError):
         typer.echo(
             f"Error: PDF '{input_pdf_path}' requires a password.\n"
-            "Use --password to prompt for password, or set PDF_PASSWORD environment variable.",
+            "Use --password VALUE or --ask-password.",
             err=True,
         )
     elif isinstance(e, PdfProtectionError):
@@ -164,11 +166,21 @@ def dump(
         ),
     ] = PageAlignment.RIGHT,
     password: Annotated[
-        bool,
+        Optional[str],
         typer.Option(
             "--password",
             "-p",
-            help="Prompt for password to open protected PDF (or set PDF_PASSWORD env var).",
+            envvar="PDF_PASSWORD",
+            help="Password to open protected PDF.",
+            show_default=False,
+        ),
+    ] = None,
+    ask_password: Annotated[
+        bool,
+        typer.Option(
+            "--ask-password",
+            help="Prompt for password to open protected PDF.",
+            show_default=False,
         ),
     ] = False,
 ) -> None:
@@ -176,7 +188,7 @@ def dump(
     if output:
         validate_output_directory(output)
 
-    pdf_password = get_pdf_password(password)
+    pdf_password = get_pdf_password(password, ask_password)
 
     # Convert PageAlignment enum to boolean for align_page_left parameter
     align_page_left = pages_alignment == PageAlignment.LEFT
@@ -226,11 +238,21 @@ def replace(
         ),
     ] = False,
     password: Annotated[
-        bool,
+        Optional[str],
         typer.Option(
             "--password",
             "-p",
-            help="Prompt for password to open protected PDF (or set PDF_PASSWORD env var).",
+            envvar="PDF_PASSWORD",
+            help="Password to open protected PDF.",
+            show_default=False,
+        ),
+    ] = None,
+    ask_password: Annotated[
+        bool,
+        typer.Option(
+            "--ask-password",
+            help="Prompt for password to open protected PDF.",
+            show_default=False,
         ),
     ] = False,
 ) -> None:
@@ -238,7 +260,7 @@ def replace(
     validated_output = validate_exclusive_options(output, in_place)
     final_output = pdf_file if in_place else validated_output
 
-    pdf_password = get_pdf_password(password)
+    pdf_password = get_pdf_password(password, ask_password)
 
     try:
         update_toc(
@@ -287,11 +309,21 @@ def append(
         ),
     ] = False,
     password: Annotated[
-        bool,
+        Optional[str],
         typer.Option(
             "--password",
             "-p",
-            help="Prompt for password to open protected PDF (or set PDF_PASSWORD env var).",
+            envvar="PDF_PASSWORD",
+            help="Password to open protected PDF.",
+            show_default=False,
+        ),
+    ] = None,
+    ask_password: Annotated[
+        bool,
+        typer.Option(
+            "--ask-password",
+            help="Prompt for password to open protected PDF.",
+            show_default=False,
         ),
     ] = False,
 ) -> None:
@@ -299,7 +331,7 @@ def append(
     validated_output = validate_exclusive_options(output, in_place)
     final_output = pdf_file if in_place else validated_output
 
-    pdf_password = get_pdf_password(password)
+    pdf_password = get_pdf_password(password, ask_password)
 
     try:
         update_toc(
