@@ -98,6 +98,98 @@ def version_callback(value: bool) -> None:
         raise typer.Exit()
 
 
+# Common argument and option definitions
+AskPasswordOption = Annotated[
+    bool,
+    typer.Option(
+        "--ask-password",
+        help="Prompt for password to open protected PDF.",
+        show_default=False,
+    ),
+]
+
+InPlaceOption = Annotated[
+    bool,
+    typer.Option(
+        "--in-place",
+        "-i",
+        help="Update the PDF file in place (overwrite original)",
+    ),
+]
+
+OutputOption = Annotated[
+    Optional[Path],
+    typer.Option(
+        "--output",
+        "-o",
+        help="Output PDF file with updated table of contents",
+        show_default="PDF filename with '_new' suffix",
+    ),
+]
+
+OutputTocOption = Annotated[
+    Optional[Path],
+    typer.Option(
+        "--output",
+        "-o",
+        help="Output table of contents text file",
+        show_default="PDF filename with _toc.txt extension",
+    ),
+]
+
+PagesAlignmentOption = Annotated[
+    PageAlignment,
+    typer.Option(
+        "--pages-alignment",
+        "-a",
+        help="Alignment of page numbers in the table of contents",
+    ),
+]
+
+PasswordOption = Annotated[
+    Optional[str],
+    typer.Option(
+        "--password",
+        "-p",
+        envvar="PDF_PASSWORD",
+        help="Password to open protected PDF.",
+        show_default=False,
+    ),
+]
+
+PdfFileArgument = Annotated[
+    Path,
+    typer.Argument(
+        file_okay=True,
+        dir_okay=False,
+        exists=True,
+        callback=validate_pdf_file,
+        help="PDF file to extract table of contents from",
+    ),
+]
+
+PdfFileModifyArgument = Annotated[
+    Path,
+    typer.Argument(
+        file_okay=True,
+        dir_okay=False,
+        exists=True,
+        callback=validate_pdf_file,
+        help="PDF file to modify",
+    ),
+]
+
+TocFileArgument = Annotated[
+    Path,
+    typer.Argument(
+        file_okay=True,
+        dir_okay=False,
+        exists=True,
+        help="Table of contents text file",
+    ),
+]
+
+
 @app.callback()
 def main(
     version: Annotated[
@@ -138,51 +230,11 @@ def main(
 
 @app.command()
 def dump(
-    pdf_file: Annotated[
-        Path,
-        typer.Argument(
-            file_okay=True,
-            dir_okay=False,
-            exists=True,
-            callback=validate_pdf_file,
-            help="PDF file to extract table of contents from",
-        ),
-    ],
-    output: Annotated[
-        Optional[Path],
-        typer.Option(
-            "--output",
-            "-o",
-            help="Output table of contents text file",
-            show_default="PDF filename with _toc.txt extension",
-        ),
-    ] = None,
-    pages_alignment: Annotated[
-        PageAlignment,
-        typer.Option(
-            "--pages-alignment",
-            "-a",
-            help="Alignment of page numbers in the table of contents",
-        ),
-    ] = PageAlignment.RIGHT,
-    password: Annotated[
-        Optional[str],
-        typer.Option(
-            "--password",
-            "-p",
-            envvar="PDF_PASSWORD",
-            help="Password to open protected PDF.",
-            show_default=False,
-        ),
-    ] = None,
-    ask_password: Annotated[
-        bool,
-        typer.Option(
-            "--ask-password",
-            help="Prompt for password to open protected PDF.",
-            show_default=False,
-        ),
-    ] = False,
+    pdf_file: PdfFileArgument,
+    ask_password: AskPasswordOption = False,
+    output: OutputTocOption = None,
+    pages_alignment: PagesAlignmentOption = PageAlignment.RIGHT,
+    password: PasswordOption = None,
 ) -> None:
     """Extract the existing table of contents from a PDF to a text file."""
     if output:
@@ -201,60 +253,12 @@ def dump(
 
 @app.command()
 def replace(
-    pdf_file: Annotated[
-        Path,
-        typer.Argument(
-            file_okay=True,
-            dir_okay=False,
-            exists=True,
-            callback=validate_pdf_file,
-            help="PDF file to modify",
-        ),
-    ],
-    toc_file: Annotated[
-        Path,
-        typer.Argument(
-            file_okay=True,
-            dir_okay=False,
-            exists=True,
-            help="Table of contents text file",
-        ),
-    ],
-    output: Annotated[
-        Optional[Path],
-        typer.Option(
-            "--output",
-            "-o",
-            help="Output PDF file with updated table of contents",
-            show_default="PDF filename with '_new' suffix",
-        ),
-    ] = None,
-    in_place: Annotated[
-        bool,
-        typer.Option(
-            "--in-place",
-            "-i",
-            help="Update the PDF file in place (overwrite original)",
-        ),
-    ] = False,
-    password: Annotated[
-        Optional[str],
-        typer.Option(
-            "--password",
-            "-p",
-            envvar="PDF_PASSWORD",
-            help="Password to open protected PDF.",
-            show_default=False,
-        ),
-    ] = None,
-    ask_password: Annotated[
-        bool,
-        typer.Option(
-            "--ask-password",
-            help="Prompt for password to open protected PDF.",
-            show_default=False,
-        ),
-    ] = False,
+    pdf_file: PdfFileModifyArgument,
+    toc_file: TocFileArgument,
+    ask_password: AskPasswordOption = False,
+    in_place: InPlaceOption = False,
+    output: OutputOption = None,
+    password: PasswordOption = None,
 ) -> None:
     """Replace the PDF's table of contents with entries from a text file."""
     validated_output = validate_exclusive_options(output, in_place)
@@ -272,60 +276,12 @@ def replace(
 
 @app.command()
 def append(
-    pdf_file: Annotated[
-        Path,
-        typer.Argument(
-            file_okay=True,
-            dir_okay=False,
-            exists=True,
-            callback=validate_pdf_file,
-            help="PDF file to modify",
-        ),
-    ],
-    toc_file: Annotated[
-        Path,
-        typer.Argument(
-            file_okay=True,
-            dir_okay=False,
-            exists=True,
-            help="Table of contents text file",
-        ),
-    ],
-    output: Annotated[
-        Optional[Path],
-        typer.Option(
-            "--output",
-            "-o",
-            help="Output PDF file with updated table of contents",
-            show_default="PDF filename with '_new' suffix",
-        ),
-    ] = None,
-    in_place: Annotated[
-        bool,
-        typer.Option(
-            "--in-place",
-            "-i",
-            help="Update the PDF file in place (overwrite original)",
-        ),
-    ] = False,
-    password: Annotated[
-        Optional[str],
-        typer.Option(
-            "--password",
-            "-p",
-            envvar="PDF_PASSWORD",
-            help="Password to open protected PDF.",
-            show_default=False,
-        ),
-    ] = None,
-    ask_password: Annotated[
-        bool,
-        typer.Option(
-            "--ask-password",
-            help="Prompt for password to open protected PDF.",
-            show_default=False,
-        ),
-    ] = False,
+    pdf_file: PdfFileModifyArgument,
+    toc_file: TocFileArgument,
+    ask_password: AskPasswordOption = False,
+    in_place: InPlaceOption = False,
+    output: OutputOption = None,
+    password: PasswordOption = None,
 ) -> None:
     """Add new table of contents entries to the existing PDF bookmarks."""
     validated_output = validate_exclusive_options(output, in_place)
